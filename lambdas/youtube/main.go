@@ -29,10 +29,14 @@ func handleLambdaEvent(evt Evt) {
 	paramClient.LoadParameterValues()
 
 	yt := youtube.NewClient(paramClient.YoutubeApiKey.Value)
-	allVideos := yt.LoadPlaylistItems()
+	allVideos := yt.LoadAllPlaylistItems()
+	// it's another loop to filter these now, rather than lower down
+	// but it's helpful to filter them first
+	// to know how many videos were loaded vs how many exist in google sheets
+	reviewVideos := youtube.GetReviewVideos(allVideos)
 
-	fmt.Printf("Loaded %d youtube videos\n", len(allVideos))
-	if len(allVideos) == 0 {
+	fmt.Printf("Loaded %d youtube videos\n", len(reviewVideos))
+	if len(reviewVideos) == 0 {
 		return
 	}
 
@@ -50,7 +54,7 @@ func handleLambdaEvent(evt Evt) {
 	}
 
 	nextVideos := []youtube.PlaylistItem{}
-	for _, v := range allVideos {
+	for _, v := range reviewVideos {
 		if prevVideoMap[v.Snippet.ResourceId.VideoId] {
 			continue
 		}

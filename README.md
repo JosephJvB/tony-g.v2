@@ -302,3 +302,5 @@ maybe even just add a new lambda here?
   - prob won't recreate this one (as youtube playlists) it has fewer songs so it's not as interesting!
 - youtube -> spotify (exists)
   - becomes: youtube -> youtube (new)
+
+I need new google auth since I'll be creating and updating youtube playlists that needs access/refresh_token stuff

@@ -25,3 +25,25 @@ func GetYoutubeVideoID(urlStr string) string {
 
 	return ""
 }
+
+func GetReviewVideos(items []PlaylistItem) []PlaylistItem {
+	filtered := []PlaylistItem{}
+
+	for _, item := range items {
+		if item.Status.PrivacyStatus == "private" {
+			continue
+		}
+		if item.Snippet.VideoOwnerChannelId != item.Snippet.ChannelId {
+			continue
+		}
+		// album review, ep review, compilation review, mixtape review
+		// why are these videos in his playlist? chaotic
+		if strings.HasSuffix(strings.TrimSpace(item.Snippet.Title), "REVIEW") {
+			continue
+		}
+
+		filtered = append(filtered, item)
+	}
+
+	return filtered
+}
