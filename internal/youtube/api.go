@@ -14,7 +14,11 @@ const PlaylistId = "PLP4CSgl7K7or84AAhr7zlLNpghEnKWu2c"
 const MyChannelId = "UC7bbCeEhOfxos9EmsvaxNGQ"
 
 type YoutubeClient struct {
-	apiKey string
+	apiKey       string
+	clientId     string
+	clientSecret string
+	refreshToken string
+	accessToken  string
 }
 
 type PlaylistItem struct {
@@ -52,6 +56,39 @@ type Playlist struct {
 type ApiResponse[T Playlist | PlaylistItem] struct {
 	NextPageToken string `json:"nextPageToken"`
 	Items         []T    `json:"items"`
+}
+
+func (yt *YoutubeClient) setAccessToken() {
+	if yt.accessToken != "" {
+		return
+	}
+
+	queryPart := url.Values{}
+	queryPart.Set("client_id", yt.clientId)
+	queryPart.Set("client_secret", yt.clientSecret)
+	queryPart.Set("refresh_token", yt.refreshToken)
+	queryPart.Set("grant_type", "refresh_token")
+
+	resp, err := http.Post("https://oauth2.googleapis.com/token", "application/x-www-form-urlencoded", strings.NewReader(queryPart.Encode()))
+	if err != nil {
+		log.Fatalf("Failed to get access token: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		b := new(strings.Builder)
+		io.Copy(b, resp.Body)
+		log.Print(b.String())
+		log.Fatalf("Failed to get access token: %s", resp.Status)
+	}
+
+	var tokenResponse struct {
+		AccessToken string `json:"access_token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
+		log.Fatalf("Failed to decode access token response: %v", err)
+	}
+
+	yt.accessToken = tokenResponse.AccessToken
 }
 
 func (yt *YoutubeClient) LoadAllPlaylistItems() []PlaylistItem {
@@ -168,8 +205,18 @@ func getPlaylists(key string, channelId string, pageToken string) ApiResponse[Pl
 	return responseBody
 }
 
-func NewClient(apiKey string) YoutubeClient {
+type YtClientConfig struct {
+	ApiKey       string
+	ClientId     string
+	ClientSecret string
+	RefreshToken string
+}
+
+func NewClient(config YtClientConfig) YoutubeClient {
 	return YoutubeClient{
-		apiKey: apiKey,
+		apiKey:       config.ApiKey,
+		clientId:     config.ClientId,
+		clientSecret: config.ClientSecret,
+		refreshToken: config.RefreshToken,
 	}
 }

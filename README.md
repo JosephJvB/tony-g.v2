@@ -304,3 +304,20 @@ maybe even just add a new lambda here?
   - becomes: youtube -> youtube (new)
 
 I need new google auth since I'll be creating and updating youtube playlists that needs access/refresh_token stuff
+https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps
+Specifically, content owners can use service accounts to call API methods that support the onBehalfOfContentOwner request parameter.
+
+ugh I still need to do an oauth flow so smelly
+i need this scope I think
+https://www.googleapis.com/auth/youtube
+
+https://accounts.google.com/o/oauth2/v2/auth
+&client_id=
+&redirect_uri=http://localhost:8080
+&response_type=code
+&scope=https://www.googleapis.com/auth/youtube
+
+POST https://oauth2.googleapis.com/token
+&client_id=
+&redirect_uri=http://localhost:8080
+&code=xxx

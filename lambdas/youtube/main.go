@@ -28,7 +28,12 @@ func handleLambdaEvent(evt Evt) {
 	paramClient := ssm.NewClient()
 	paramClient.LoadParameterValues()
 
-	yt := youtube.NewClient(paramClient.YoutubeApiKey.Value)
+	yt := youtube.NewClient(youtube.YtClientConfig{
+		ApiKey:       paramClient.YoutubeApiKey.Value,
+		ClientId:     paramClient.YoutubeClientId.Value,
+		ClientSecret: paramClient.YoutubeClientSecret.Value,
+		RefreshToken: paramClient.YoutubeRefreshToken.Value,
+	})
 	allVideos := yt.LoadAllPlaylistItems()
 	// it's another loop to filter these now, rather than lower down
 	// but it's helpful to filter them first

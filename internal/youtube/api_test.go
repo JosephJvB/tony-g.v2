@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -15,7 +16,9 @@ func TestYoutube(t *testing.T) {
 		t.Skip("its messing with the youtube api key")
 		testApiKey := "_test_youtubeApiKey"
 
-		yt := NewClient(testApiKey)
+		yt := NewClient(YtClientConfig{
+			ApiKey: testApiKey,
+		})
 
 		if yt.apiKey == "" {
 			t.Errorf("apiKey not set on Youtube Client")
@@ -32,7 +35,9 @@ func TestYoutube(t *testing.T) {
 		}
 
 		apiKey := os.Getenv("YOUTUBE_API_KEY")
-		yt := NewClient(apiKey)
+		yt := NewClient(YtClientConfig{
+			ApiKey: apiKey,
+		})
 
 		items := yt.LoadAllPlaylistItems()
 
@@ -100,7 +105,9 @@ func TestYoutube(t *testing.T) {
 				},
 			})
 
-		yt := NewClient(testApiKey)
+		yt := NewClient(YtClientConfig{
+			ApiKey: testApiKey,
+		})
 
 		items := yt.LoadAllPlaylistItems()
 
@@ -126,7 +133,9 @@ func TestYoutube(t *testing.T) {
 		}
 
 		apiKey := os.Getenv("YOUTUBE_API_KEY")
-		yt := NewClient(apiKey)
+		yt := NewClient(YtClientConfig{
+			ApiKey: apiKey,
+		})
 
 		items := yt.LoadAllPlaylists()
 
@@ -142,6 +151,29 @@ func TestYoutube(t *testing.T) {
 		err = os.WriteFile("../../data/youtube-playlists.json", b, 0666)
 		if err != nil {
 			panic(err)
+		}
+	})
+
+	t.Run("set access token works", func(t *testing.T) {
+		t.Skip("skip test calling YoutubeAPI")
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+
+		yt := NewClient(YtClientConfig{
+			ApiKey:       os.Getenv("YOUTUBE_API_KEY"),
+			ClientId:     os.Getenv("YOUTUBE_CLIENT_ID"),
+			ClientSecret: os.Getenv("YOUTUBE_CLIENT_SECRET"),
+			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
+		})
+
+		yt.setAccessToken()
+
+		fmt.Printf("yt access token: %s\n", yt.accessToken)
+
+		if yt.accessToken == "" {
+			t.Errorf("Failed to set access token")
 		}
 	})
 }

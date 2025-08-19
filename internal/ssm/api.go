@@ -25,6 +25,9 @@ type SsmClient struct {
 	GoogleSearchApiKey  Parameter
 	GoogleSearchCx      Parameter
 	YoutubeApiKey       Parameter
+	YoutubeClientId     Parameter
+	YoutubeClientSecret Parameter
+	YoutubeRefreshToken Parameter
 }
 
 func NewClient() SsmClient {
@@ -78,6 +81,18 @@ func NewClient() SsmClient {
 			Name:  "/Tony2Stack/youtube/api-key",
 			Value: "",
 		},
+		YoutubeClientId: Parameter{
+			Name:  "/Tony2Stack/youtube/client-id",
+			Value: "",
+		},
+		YoutubeClientSecret: Parameter{
+			Name:  "/Tony2Stack/youtube/client-secret",
+			Value: "",
+		},
+		YoutubeRefreshToken: Parameter{
+			Name:  "/Tony2Stack/youtube/refresh-token",
+			Value: "",
+		},
 	}
 }
 
@@ -92,6 +107,9 @@ func (sc *SsmClient) LoadParameterValues() {
 		sc.GoogleSearchApiKey,
 		sc.GoogleSearchCx,
 		sc.YoutubeApiKey,
+		sc.YoutubeClientId,
+		sc.YoutubeClientSecret,
+		sc.YoutubeRefreshToken,
 	}
 
 	names := []string{}
@@ -126,4 +144,7 @@ func (sc *SsmClient) LoadParameterValues() {
 	sc.GoogleSearchApiKey.Value = m[sc.GoogleSearchApiKey.Name]
 	sc.GoogleSearchCx.Value = m[sc.GoogleSearchCx.Name]
 	sc.YoutubeApiKey.Value = m[sc.YoutubeApiKey.Name]
+	sc.YoutubeClientId.Value = m[sc.YoutubeClientId.Name]
+	sc.YoutubeClientSecret.Value = m[sc.YoutubeClientSecret.Name]
+	sc.YoutubeRefreshToken.Value = m[sc.YoutubeRefreshToken.Name]
 }
