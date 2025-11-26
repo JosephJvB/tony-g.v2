@@ -321,3 +321,15 @@ POST https://oauth2.googleapis.com/token
 &client_id=
 &redirect_uri=http://localhost:8080
 &code=xxx
+
+- Move to YT music
+  - make sure new Youtube API methods are working
+    - setAccessToken
+      - turns out my existing refresh token had a 7 day expiry. Got a non-expiring one now! Wicky wings.
+    - loadAllPlaylists (my playlists)
+  - create new Youtube API methods
+    - createPlaylist
+    - addItemsToPlaylist
+      - consider which order items are added
+  - New Google Sheets Data
+  - Shall I keep sorting with the Google Script? Or do it in code. I think it's better in code right. I'll do that later tho lol.

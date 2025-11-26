@@ -35,9 +35,7 @@ func handleLambdaEvent(evt Evt) {
 		RefreshToken: paramClient.YoutubeRefreshToken.Value,
 	})
 	allVideos := yt.LoadAllPlaylistItems()
-	// it's another loop to filter these now, rather than lower down
-	// but it's helpful to filter them first
-	// to know how many videos were loaded vs how many exist in google sheets
+	// remove vid which aren't weekly track reviews
 	reviewVideos := youtube.GetReviewVideos(allVideos)
 
 	fmt.Printf("Loaded %d youtube videos\n", len(reviewVideos))
