@@ -21,31 +21,28 @@ type YoutubeClient struct {
 	accessToken  string
 }
 
+type PlaylistSnippet struct {
+	Title               string `json:"title"`
+	Description         string `json:"description"`
+	PublishedAt         string `json:"publishedAt"`
+	VideoOwnerChannelId string `json:"videoOwnerChannelId"`
+	ChannelId           string `json:"channelId"`
+	ResourceId          struct {
+		Kind    string `json:"kind"`
+		VideoId string `json:"videoId"`
+	} `json:"resourceId"`
+}
+
 type PlaylistItem struct {
-	Snippet struct {
-		Title               string `json:"title"`
-		Description         string `json:"description"`
-		PublishedAt         string `json:"publishedAt"`
-		VideoOwnerChannelId string `json:"videoOwnerChannelId"`
-		ChannelId           string `json:"channelId"`
-		ResourceId          struct {
-			Kind    string `json:"kind"`
-			VideoId string `json:"videoId"`
-		} `json:"resourceId"`
-	} `json:"snippet"`
-	Status struct {
+	Snippet PlaylistSnippet `json:"snippet"`
+	Status  struct {
 		PrivacyStatus string `json:"privacyStatus"`
 	} `json:"status"`
 }
 type Playlist struct {
-	Id      string `json:"id"`
-	Snippet struct {
-		PublishedAt string `json:"publishedAt"`
-		ChannelId   string `json:"channelId"`
-		Title       string `json:"title"`
-		Description string `json:"description"`
-	} `json:"snippet"`
-	Status struct {
+	Id      string          `json:"id"`
+	Snippet PlaylistSnippet `json:"snippet"`
+	Status  struct {
 		PrivacyStatus string `json:"privacyStatus"`
 	} `json:"status"`
 	ContentDetails struct {
@@ -203,6 +200,54 @@ func getPlaylists(key string, channelId string, pageToken string) ApiResponse[Pl
 	json.NewDecoder(resp.Body).Decode(&responseBody)
 
 	return responseBody
+}
+
+func (yt *YoutubeClient) CreatePlaylist(title string, description string) {
+	if yt.accessToken == "" {
+		yt.setAccessToken()
+	}
+
+	apiUrl := BaseUrl + "/playlists"
+
+	queryPart := url.Values{}
+	queryPart.Set("part", "snippet,status")
+
+	apiUrl += "?" + queryPart.Encode()
+
+	postData := map[string]any{
+		"snippet": map[string]any{
+			"title":       title,
+			"description": description,
+		},
+		"status": map[string]any{
+			"privacyStatus": "public",
+		},
+	}
+	postBuffer, _ := json.Marshal(postData)
+	postString := strings.NewReader(string(postBuffer))
+	log.Println(postString)
+
+	req, _ := http.NewRequest("POST", apiUrl, postString)
+
+	authHeaderValue := "Bearer " + yt.accessToken
+	req.Header.Set("Authorization", authHeaderValue)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	if resp.StatusCode > 299 {
+		b := new(strings.Builder)
+		io.Copy(b, resp.Body)
+		log.Print(b.String())
+		log.Fatalf("\nCreatePlaylist failed: \"%s\"", resp.Status)
+	}
+
+	b := new(strings.Builder)
+	io.Copy(b, resp.Body)
+	log.Print(b.String())
+	log.Println("Create playlist sucess")
 }
 
 type YtClientConfig struct {
