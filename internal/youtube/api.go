@@ -10,8 +10,8 @@ import (
 )
 
 const BaseUrl = "https://www.googleapis.com/youtube/v3"
-const PlaylistId = "PLP4CSgl7K7or84AAhr7zlLNpghEnKWu2c"
-const MyChannelId = "UC7bbCeEhOfxos9EmsvaxNGQ"
+const TonysWeeklyPlaylistId = "PLP4CSgl7K7or84AAhr7zlLNpghEnKWu2c"
+const MyChannelId = "UCHySUV2IA90V2IVxpLkGavQ"
 
 type YoutubeClient struct {
 	apiKey       string
@@ -88,10 +88,10 @@ func (yt *YoutubeClient) setAccessToken() {
 	yt.accessToken = tokenResponse.AccessToken
 }
 
-func (yt *YoutubeClient) LoadAllPlaylistItems() []PlaylistItem {
+func (yt *YoutubeClient) LoadAllPlaylistItems(playlistId string) []PlaylistItem {
 	resp := getPlaylistItems(
 		yt.apiKey,
-		PlaylistId,
+		playlistId,
 		"",
 	)
 
@@ -101,7 +101,7 @@ func (yt *YoutubeClient) LoadAllPlaylistItems() []PlaylistItem {
 	for pageToken != "" {
 		resp := getPlaylistItems(
 			yt.apiKey,
-			PlaylistId,
+			playlistId,
 			pageToken,
 		)
 
@@ -202,7 +202,7 @@ func getPlaylists(key string, channelId string, pageToken string) ApiResponse[Pl
 	return responseBody
 }
 
-func (yt *YoutubeClient) CreatePlaylist(title string, description string) {
+func (yt *YoutubeClient) CreatePlaylist(title string, description string) Playlist {
 	if yt.accessToken == "" {
 		yt.setAccessToken()
 	}
@@ -225,7 +225,6 @@ func (yt *YoutubeClient) CreatePlaylist(title string, description string) {
 	}
 	postBuffer, _ := json.Marshal(postData)
 	postString := strings.NewReader(string(postBuffer))
-	log.Println(postString)
 
 	req, _ := http.NewRequest("POST", apiUrl, postString)
 
@@ -244,10 +243,58 @@ func (yt *YoutubeClient) CreatePlaylist(title string, description string) {
 		log.Fatalf("\nCreatePlaylist failed: \"%s\"", resp.Status)
 	}
 
-	b := new(strings.Builder)
-	io.Copy(b, resp.Body)
-	log.Print(b.String())
-	log.Println("Create playlist sucess")
+	responseBody := Playlist{}
+	json.NewDecoder(resp.Body).Decode(&responseBody)
+
+	return responseBody
+}
+
+func (yt *YoutubeClient) AddPlaylistItems(playlistId string, videoIds []string) {
+	if yt.accessToken == "" {
+		yt.setAccessToken()
+	}
+
+	for _, videoId := range videoIds {
+		addPlaylistItem(yt.accessToken, playlistId, videoId)
+	}
+}
+
+func addPlaylistItem(accessToken string, playlistId string, videoId string) {
+	apiUrl := BaseUrl + "/playlistItems"
+
+	queryPart := url.Values{}
+	queryPart.Set("part", "snippet")
+
+	apiUrl += "?" + queryPart.Encode()
+
+	postData := map[string]any{
+		"snippet": map[string]any{
+			"playlistId": playlistId,
+			"resourceId": map[string]string{
+				"kind":    "youtube#video",
+				"videoId": videoId,
+			},
+		},
+	}
+	postBuffer, _ := json.Marshal(postData)
+	postString := strings.NewReader(string(postBuffer))
+
+	req, _ := http.NewRequest("POST", apiUrl, postString)
+
+	authHeaderValue := "Bearer " + accessToken
+	req.Header.Set("Authorization", authHeaderValue)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	if resp.StatusCode > 299 {
+		b := new(strings.Builder)
+		io.Copy(b, resp.Body)
+		log.Print(b.String())
+		log.Fatalf("\naddPlaylistItem failed: \"%s\"", resp.Status)
+	}
 }
 
 type YtClientConfig struct {

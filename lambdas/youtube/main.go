@@ -34,7 +34,7 @@ func handleLambdaEvent(evt Evt) {
 		ClientSecret: paramClient.YoutubeClientSecret.Value,
 		RefreshToken: paramClient.YoutubeRefreshToken.Value,
 	})
-	allVideos := yt.LoadAllPlaylistItems()
+	allVideos := yt.LoadAllPlaylistItems(youtube.TonysWeeklyPlaylistId)
 	// remove vid which aren't weekly track reviews
 	reviewVideos := youtube.GetReviewVideos(allVideos)
 

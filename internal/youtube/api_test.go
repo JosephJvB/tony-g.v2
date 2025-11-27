@@ -25,7 +25,7 @@ func TestYoutube(t *testing.T) {
 		}
 	})
 
-	t.Run("can load all youtube items", func(t *testing.T) {
+	t.Run("can load all playlist items", func(t *testing.T) {
 		t.Skip("skip test calling YoutubeAPI")
 
 		// Load actual Youtube API Key
@@ -39,7 +39,7 @@ func TestYoutube(t *testing.T) {
 			ApiKey: apiKey,
 		})
 
-		items := yt.LoadAllPlaylistItems()
+		items := yt.LoadAllPlaylistItems("PLShqBUh4XbMUKR87gh9ZxUbsYkQoZd7aF")
 
 		if len(items) == 0 {
 			t.Errorf("Failed to load playlist items")
@@ -109,7 +109,7 @@ func TestYoutube(t *testing.T) {
 			ApiKey: testApiKey,
 		})
 
-		items := yt.LoadAllPlaylistItems()
+		items := yt.LoadAllPlaylistItems(TonysWeeklyPlaylistId)
 
 		if len(items) != 2 {
 			t.Errorf("Expected to load two playlist items received %d", len(items))
@@ -192,5 +192,25 @@ func TestYoutube(t *testing.T) {
 		})
 
 		yt.CreatePlaylist("bright", "eyes")
+	})
+
+	t.Run("AddPlaylistItems works", func(t *testing.T) {
+		t.Skip("skip test calling YoutubeAPI")
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+
+		yt := NewClient(YtClientConfig{
+			ApiKey:       os.Getenv("YOUTUBE_API_KEY"),
+			ClientId:     os.Getenv("YOUTUBE_CLIENT_ID"),
+			ClientSecret: os.Getenv("YOUTUBE_CLIENT_SECRET"),
+			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
+		})
+
+		yt.AddPlaylistItems("PLShqBUh4XbMUKR87gh9ZxUbsYkQoZd7aF", []string{
+			"qIol9hig2G4",
+			"qIol9hig2G4",
+		})
 	})
 }
