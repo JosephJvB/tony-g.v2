@@ -12,6 +12,7 @@ import (
 const BaseUrl = "https://www.googleapis.com/youtube/v3"
 const TonysWeeklyPlaylistId = "PLP4CSgl7K7or84AAhr7zlLNpghEnKWu2c"
 const MyChannelId = "UCHySUV2IA90V2IVxpLkGavQ"
+const MusicTopicId = "/m/04rlf"
 
 type YoutubeClient struct {
 	apiKey       string
@@ -112,6 +113,7 @@ func (yt *YoutubeClient) LoadAllPlaylistItems(playlistId string) []PlaylistItem 
 	return items
 }
 
+// TODO: define input type rather than 3 strings
 func getPlaylistItems(key string, playlistId string, pageToken string) ApiResponse[PlaylistItem] {
 	apiUrl := BaseUrl + "/playlistItems"
 
@@ -169,6 +171,7 @@ func (yt *YoutubeClient) LoadAllPlaylists() []Playlist {
 	return items
 }
 
+// TODO: define input type rather than 3 strings
 func getPlaylists(key string, channelId string, pageToken string) ApiResponse[Playlist] {
 	apiUrl := BaseUrl + "/playlists"
 
@@ -202,6 +205,7 @@ func getPlaylists(key string, channelId string, pageToken string) ApiResponse[Pl
 	return responseBody
 }
 
+// TODO: define input type rather than 2 strings
 func (yt *YoutubeClient) CreatePlaylist(title string, description string) Playlist {
 	if yt.accessToken == "" {
 		yt.setAccessToken()
@@ -259,6 +263,7 @@ func (yt *YoutubeClient) AddPlaylistItems(playlistId string, videoIds []string) 
 	}
 }
 
+// TODO: define input type rather than 3 strings
 func addPlaylistItem(accessToken string, playlistId string, videoId string) {
 	apiUrl := BaseUrl + "/playlistItems"
 
@@ -295,6 +300,43 @@ func addPlaylistItem(accessToken string, playlistId string, videoId string) {
 		log.Print(b.String())
 		log.Fatalf("\naddPlaylistItem failed: \"%s\"", resp.Status)
 	}
+}
+
+type FindTrackInput struct {
+	Title  string
+	Artist string
+}
+
+// https://developers.google.com/youtube/v3/docs/search/list
+// NOT WORKING YET don't have video id details. Weird! Probably a param issue
+func (yt *YoutubeClient) FindVideo(t FindTrackInput) []PlaylistItem {
+	apiUrl := BaseUrl + "/search"
+
+	queryPart := url.Values{}
+	queryPart.Set("part", "snippet")
+	queryPart.Set("maxResults", "1")
+	queryPart.Set("q", t.Title+" "+t.Artist)
+	queryPart.Set("topicId", MusicTopicId)
+	queryPart.Set("key", yt.apiKey)
+
+	apiUrl += "?" + queryPart.Encode()
+
+	resp, err := http.Get(apiUrl)
+	if err != nil {
+		panic(err)
+	}
+
+	if resp.StatusCode > 299 {
+		b := new(strings.Builder)
+		io.Copy(b, resp.Body)
+		log.Print(b.String())
+		log.Fatalf("\nFindVideo failed failed: \"%s\"", resp.Status)
+	}
+
+	responseBody := ApiResponse[PlaylistItem]{}
+	json.NewDecoder(resp.Body).Decode(&responseBody)
+
+	return responseBody.Items
 }
 
 type YtClientConfig struct {
