@@ -247,4 +247,38 @@ func TestYoutube(t *testing.T) {
 			panic(err)
 		}
 	})
+
+	t.Run("FindVideo works: what about like videos where you just want the audio?", func(t *testing.T) {
+		t.Skip("skip test calling YoutubeAPI")
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+
+		yt := NewClient(YtClientConfig{
+			ApiKey:       os.Getenv("YOUTUBE_API_KEY"),
+			ClientId:     os.Getenv("YOUTUBE_CLIENT_ID"),
+			ClientSecret: os.Getenv("YOUTUBE_CLIENT_SECRET"),
+			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
+		})
+
+		results := yt.FindVideo(FindTrackInput{
+			Title:  "Blinding Lights",
+			Artist: "The Weeknd",
+		})
+
+		if len(results) == 0 {
+			log.Fatal("failed to find any search results for Blinding Lights")
+		}
+
+		b, err := json.MarshalIndent(results, "", "	")
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.WriteFile("../../data/youtube-search-results.json", b, 0666)
+		if err != nil {
+			panic(err)
+		}
+	})
 }

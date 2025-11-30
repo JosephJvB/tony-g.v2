@@ -40,6 +40,17 @@ type PlaylistItem struct {
 		PrivacyStatus string `json:"privacyStatus"`
 	} `json:"status"`
 }
+
+// https://developers.google.com/youtube/v3/docs/search#resource
+type SearchResult struct {
+	Id struct {
+		VideoId string `json:"videoId"`
+	} `json:"id"`
+	Snippet struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	} `json:"snippet"`
+}
 type Playlist struct {
 	Id      string          `json:"id"`
 	Snippet PlaylistSnippet `json:"snippet"`
@@ -51,7 +62,7 @@ type Playlist struct {
 	} `json:"contentDetails"`
 }
 
-type ApiResponse[T Playlist | PlaylistItem] struct {
+type ApiResponse[T Playlist | PlaylistItem | SearchResult] struct {
 	NextPageToken string `json:"nextPageToken"`
 	Items         []T    `json:"items"`
 }
@@ -308,14 +319,15 @@ type FindTrackInput struct {
 }
 
 // https://developers.google.com/youtube/v3/docs/search/list
-// NOT WORKING YET don't have video id details. Weird! Probably a param issue
-func (yt *YoutubeClient) FindVideo(t FindTrackInput) []PlaylistItem {
+func (yt *YoutubeClient) FindVideo(t FindTrackInput) []SearchResult {
 	apiUrl := BaseUrl + "/search"
 
 	queryPart := url.Values{}
 	queryPart.Set("part", "snippet")
 	queryPart.Set("maxResults", "1")
-	queryPart.Set("q", t.Title+" "+t.Artist)
+	// videos often have extra audio stuff you don't want
+	// see "Blinding Lights by the Weeknd"
+	queryPart.Set("q", t.Artist+" - "+t.Title+" (official audio)")
 	queryPart.Set("topicId", MusicTopicId)
 	queryPart.Set("key", yt.apiKey)
 
@@ -333,7 +345,7 @@ func (yt *YoutubeClient) FindVideo(t FindTrackInput) []PlaylistItem {
 		log.Fatalf("\nFindVideo failed failed: \"%s\"", resp.Status)
 	}
 
-	responseBody := ApiResponse[PlaylistItem]{}
+	responseBody := ApiResponse[SearchResult]{}
 	json.NewDecoder(resp.Body).Decode(&responseBody)
 
 	return responseBody.Items
