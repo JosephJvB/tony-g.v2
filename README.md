@@ -261,3 +261,75 @@ and should definitely review those items which I was able to manually resolve th
 42 found with google search
 
 So just over 50%. It's better than nothing but not gr8 for sure
+
+set up CI to build & test on commits?
+https://github.com/JosephJvB/tony-g/new/main?filename=.github%2Fworkflows%2Fgo.yml&workflow_template=ci%2Fgo
+https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+v2
+Can I update Youtube Playlists instead of Spotify Playlists?
+
+Then I could move to using Youtube Music > Spotify
+
+would need
+
+1. new sheets in google sheets
+2. new youtube apis
+
+   - get playlists
+   - search
+   - create playlist
+   - update playlist
+
+3. remove googlesearch fallback since that was just to be a bandaid over spotify search
+4. rm spotify apis
+5. make a new repo? Or just a branch
+   nah I think it makes sense to have a new repo
+6. deploy as a brand new aws service I think so I can keep using spotify for now
+   - would that have any issues with like api quota?
+     - ie if both services are running and using the same API keys
+     - gemini quota should be fine
+     - only risk is if I was migrating videos to youtube and trying to parse loads of video descriptions as the spotify service was running
+
+Wait is SoundCloud an option? Maybe it's the one?
+
+Youtube would be super easy. Tony's links these days are all Youtube ones, I wouldn't even have to search for the track, he's got the video url and Id right there, it's v darn simple.
+just get all videos, get all youtube links from description from best section, get id from url, make request to youtube. (would still need youtube search as a fallback in case the link isn't for a youtube video)
+
+maybe even just add a new lambda here?
+
+- tnd -> apple -> spotify (exists)
+  - prob won't recreate this one (as youtube playlists) it has fewer songs so it's not as interesting!
+- youtube -> spotify (exists)
+  - becomes: youtube -> youtube (new)
+
+I need new google auth since I'll be creating and updating youtube playlists that needs access/refresh_token stuff
+https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps
+Specifically, content owners can use service accounts to call API methods that support the onBehalfOfContentOwner request parameter.
+
+ugh I still need to do an oauth flow so smelly
+i need this scope I think
+https://www.googleapis.com/auth/youtube
+
+https://accounts.google.com/o/oauth2/v2/auth
+&client_id=
+&redirect_uri=http://localhost:8080
+&response_type=code
+&scope=https://www.googleapis.com/auth/youtube
+
+POST https://oauth2.googleapis.com/token
+&client_id=
+&redirect_uri=http://localhost:8080
+&code=xxx
+
+- Move to YT music
+  - make sure new Youtube API methods are working
+    - setAccessToken
+      - turns out my existing refresh token had a 7 day expiry. Got a non-expiring one now! Wicky wings.
+    - loadAllPlaylists (my playlists)
+  - create new Youtube API methods
+    - createPlaylist
+    - addItemsToPlaylist
+      - consider which order items are added
+  - New Google Sheets Data
+  - Shall I keep sorting with the Google Script? Or do it in code. I think it's better in code right. I'll do that later tho lol.

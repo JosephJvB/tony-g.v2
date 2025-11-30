@@ -21,33 +21,6 @@ Globals:
 
 # https://docs.aws.amazon.com/lambda/latest/dg/golang-package.html#golang-package-create-sam
 Resources:
-  AppleLambdaFn:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: go1.x
-    Properties:
-      Runtime: provided.al2023
-      CodeUri: lambdas/apple/
-      Handler: bootstrap
-      Architectures:
-        - arm64
-      Policies:
-        - SSMParameterWithSlashPrefixReadPolicy:
-            # TODO: does prefix* work? Or will I need to add one policy per parameter?
-            # Seems to work!
-            ParameterName: /Tony2Stack/*
-      Events:
-        WeeklyInvoko:
-          Type: ScheduleV2
-          Properties:
-            # also accepts '{ "year": int }' but defaults to current Year
-            Input: '{}'
-            # TODO: on cron, saturday morning
-            # apple playlists are updated on Friday, so they say.
-            # https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-scheduled-rule-pattern.html
-            # minutes, hours, day-of-month, month, day-of-week, year
-            ScheduleExpression: cron(0 7 ? * SAT *)
-
   YoutubeLambdaFn:
     Type: AWS::Serverless::Function
     Metadata:
@@ -76,9 +49,6 @@ Resources:
             ScheduleExpression: cron(0 7 ? * TUE *)
 
 Outputs:
-  AppleLambdaFn:
-    Description: apple playlist to spotify playlist
-    Value: !Ref AppleLambdaFn
-  # YoutubeLambdaFn:
-  #   Description: Youtube video descriptions to spotify playlist
-  #   Value: !Ref YoutubeLambdaFn
+  YoutubeLambdaFn:
+    Description: Youtube video descriptions to youtube playlists
+    Value: !Ref YoutubeLambdaFn

@@ -19,9 +19,6 @@ func TestSsm(t *testing.T) {
 		list := []Parameter{
 			sc.GoogleClientEmail,
 			sc.GooglePrivateKey,
-			sc.SpotifyClientId,
-			sc.SpotifyClientSecret,
-			sc.SpotifyRefreshToken,
 		}
 
 		missing := []string{}

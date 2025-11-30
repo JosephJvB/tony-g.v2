@@ -28,11 +28,18 @@ func handleLambdaEvent(evt Evt) {
 	paramClient := ssm.NewClient()
 	paramClient.LoadParameterValues()
 
-	yt := youtube.NewClient(paramClient.YoutubeApiKey.Value)
-	allVideos := yt.LoadPlaylistItems()
+	yt := youtube.NewClient(youtube.YtClientConfig{
+		ApiKey:       paramClient.YoutubeApiKey.Value,
+		ClientId:     paramClient.YoutubeClientId.Value,
+		ClientSecret: paramClient.YoutubeClientSecret.Value,
+		RefreshToken: paramClient.YoutubeRefreshToken.Value,
+	})
+	allVideos := yt.LoadAllPlaylistItems(youtube.TonysWeeklyPlaylistId)
+	// remove vid which aren't weekly track reviews
+	reviewVideos := youtube.GetReviewVideos(allVideos)
 
-	fmt.Printf("Loaded %d youtube videos\n", len(allVideos))
-	if len(allVideos) == 0 {
+	fmt.Printf("Loaded %d youtube videos\n", len(reviewVideos))
+	if len(reviewVideos) == 0 {
 		return
 	}
 
@@ -50,7 +57,7 @@ func handleLambdaEvent(evt Evt) {
 	}
 
 	nextVideos := []youtube.PlaylistItem{}
-	for _, v := range allVideos {
+	for _, v := range reviewVideos {
 		if prevVideoMap[v.Snippet.ResourceId.VideoId] {
 			continue
 		}
