@@ -8,9 +8,7 @@ import (
 	"strings"
 	"time"
 	"tony-g/internal/gemini"
-	"tony-g/internal/googlesearch"
 	"tony-g/internal/googlesheets"
-	"tony-g/internal/spotify"
 	"tony-g/internal/ssm"
 	"tony-g/internal/youtube"
 
@@ -34,12 +32,12 @@ func handleLambdaEvent(evt Evt) {
 		ClientSecret: paramClient.YoutubeClientSecret.Value,
 		RefreshToken: paramClient.YoutubeRefreshToken.Value,
 	})
-	allVideos := yt.LoadAllPlaylistItems(youtube.TonysWeeklyPlaylistId)
+	allTonysVideos := yt.LoadAllPlaylistItems(youtube.TonysWeeklyPlaylistId)
 	// remove vid which aren't weekly track reviews
-	reviewVideos := youtube.GetReviewVideos(allVideos)
+	tonysReviewVideos := youtube.GetReviewVideos(allTonysVideos)
 
-	fmt.Printf("Loaded %d youtube videos\n", len(reviewVideos))
-	if len(reviewVideos) == 0 {
+	fmt.Printf("Loaded %d tonys review videos\n", len(tonysReviewVideos))
+	if len(tonysReviewVideos) == 0 {
 		return
 	}
 
@@ -48,16 +46,16 @@ func handleLambdaEvent(evt Evt) {
 		PrivateKey: paramClient.GooglePrivateKey.Value,
 	})
 
-	prevVideos := gs.GetYoutubeVideos()
-	fmt.Printf("Loaded %d scraped youtube videos from google sheets\n", len(prevVideos))
+	prevReviewVideos := gs.GetTonysVideos()
+	fmt.Printf("Loaded %d scraped youtube videos from google sheets\n", len(prevReviewVideos))
 
 	prevVideoMap := map[string]bool{}
-	for _, v := range prevVideos {
+	for _, v := range prevReviewVideos {
 		prevVideoMap[v.Id] = true
 	}
 
 	nextVideos := []youtube.PlaylistItem{}
-	for _, v := range reviewVideos {
+	for _, v := range tonysReviewVideos {
 		if prevVideoMap[v.Snippet.ResourceId.VideoId] {
 			continue
 		}
@@ -69,35 +67,24 @@ func handleLambdaEvent(evt Evt) {
 
 		nextVideos = append(nextVideos, v)
 	}
-	fmt.Printf("%d Youtube Videos to pull tracks from\n", len(nextVideos))
+	fmt.Printf("%d Review Videos to pull tracks from\n", len(nextVideos))
 	if len(nextVideos) == 0 {
 		return
 	}
-
-	// add oldest videos oldest first
-	slices.SortFunc(nextVideos, func(a, z youtube.PlaylistItem) int {
-		if a.Snippet.PublishedAt < z.Snippet.PublishedAt {
-			return -1
-		}
-		if a.Snippet.PublishedAt > z.Snippet.PublishedAt {
-			return 1
-		}
-		return 0
-	})
 
 	gem := gemini.NewClient(
 		paramClient.GeminiApiKey.Value,
 	)
 
-	nextTrackRows := []googlesheets.YoutubeTrackRow{}
-	nextVideoRows := []googlesheets.YoutubeVideoRow{}
+	nextTrackRows := []googlesheets.FoundTrackRow{}
+	nextVideoRows := []googlesheets.TonyVideoRow{}
 	upper := int(math.Min(float64(len(nextVideos)), 5)) // max 5 videos
 	nextVideos = nextVideos[0:upper]
 	for i, v := range nextVideos {
 		fmt.Printf("Getting tracks from description %d/%d\r", i+1, len(nextVideos))
 		nextTracks := gem.ParseYoutubeDescription(v.Snippet.Description)
 
-		nv := googlesheets.YoutubeVideoRow{
+		nv := googlesheets.TonyVideoRow{
 			Id:          v.Snippet.ResourceId.VideoId,
 			Title:       v.Snippet.Title,
 			PublishedAt: v.Snippet.PublishedAt,
@@ -107,17 +94,23 @@ func handleLambdaEvent(evt Evt) {
 		}
 		nextVideoRows = append(nextVideoRows, nv)
 
+		videoDate, err := time.Parse(time.RFC3339, v.Snippet.PublishedAt)
+		year := -1
+		if err == nil {
+			year = videoDate.Year()
+		}
+
 		for _, t := range nextTracks {
-			r := googlesheets.YoutubeTrackRow{
-				Title:            t.Title,
-				Artist:           t.Artist,
-				Source:           "",
-				FoundTrackInfo:   "",
-				SpotifyUrl:       "",
-				Link:             t.Url,
-				VideoId:          v.Snippet.ResourceId.VideoId,
-				VideoPublishDate: v.Snippet.PublishedAt,
-				AddedAt:          timestamp,
+			r := googlesheets.FoundTrackRow{
+				Title:                  t.Title,
+				Artist:                 t.Artist,
+				FoundTrackInfo:         "",
+				TrackVideoId:           "",
+				Link:                   t.Url,
+				ReviewVideoId:          v.Snippet.ResourceId.VideoId,
+				ReviewVideoPublishDate: v.Snippet.PublishedAt,
+				AddedAt:                timestamp,
+				Playlist:               strconv.Itoa(year),
 			}
 
 			nextTrackRows = append(nextTrackRows, r)
@@ -128,128 +121,94 @@ func handleLambdaEvent(evt Evt) {
 		return
 	}
 
-	spc := spotify.NewClient(spotify.Secrets{
-		ClientId:     paramClient.SpotifyClientId.Value,
-		ClientSecret: paramClient.SpotifyClientSecret.Value,
-		RefreshToken: paramClient.SpotifyRefreshToken.Value,
-	})
-	gcs := googlesearch.NewClient(googlesearch.Secrets{
-		ApiKey: paramClient.GoogleSearchApiKey.Value,
-		Cx:     paramClient.GoogleSearchCx.Value,
-	})
-
-	toAddByYear := map[int][]string{}
+	// year -> youtube video id
+	// used for final youtube.AddPlaylistItems
+	toAddByYear := map[string][]string{}
+	// just for counting
 	foundMap := map[string]int{}
 	totalFound := 0
-	numSearches := 1
 	for i, t := range nextTrackRows {
 		fmt.Printf("finding track %d/%d\r", i+1, len(nextTrackRows))
 
-		videoDate, err := time.Parse(time.RFC3339, t.VideoPublishDate)
-		year := -1
-		if err == nil {
-			year = videoDate.Year()
-		}
-
-		res := spc.FindTrack(spotify.FindTrackInput{
-			Title:  t.Title,
-			Artist: t.Artist,
-		})
-		if len(res) > 0 {
-			nextTrackRows[i].Source = "Spotify Search"
-			nextTrackRows[i].FoundTrackInfo = spotify.GetTrackInfo(res[0])
-			nextTrackRows[i].SpotifyUrl = res[0].ExternalUrls.Spotify
-			toAddByYear[year] = append(toAddByYear[year], res[0].Uri)
-			foundMap[t.VideoId]++
+		idFromLink := youtube.GetYoutubeVideoID(t.Link)
+		if idFromLink != "" {
+			nextTrackRows[i].TrackVideoId = idFromLink
+			nextTrackRows[i].FoundTrackInfo = "id from link"
+			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], idFromLink)
+			foundMap[t.ReviewVideoId]++
 			totalFound++
 			continue
 		}
 
-		fmt.Printf("\nGoogle Search %d / 100(quotaLimit): \"%s by %s\"\n", numSearches, t.Title, t.Artist)
-		numSearches++
-
-		res2 := gcs.FindSpotifyTrack(googlesearch.FindTrackInput{
-			Title:  t.Title,
+		res := yt.FindTrack(youtube.FindTrackInput{
 			Artist: t.Artist,
+			Title:  t.Title,
 		})
-		if len(res2) == 0 {
-			continue
-		}
 
-		uri, ok := spotify.LinkToTrackUri(res2[0].Link)
-		if !ok {
-			continue
+		if len(res) > 0 {
+			nextTrackRows[i].TrackVideoId = res[0].Id.VideoId
+			nextTrackRows[i].FoundTrackInfo = res[0].Snippet.Title
+			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], res[0].Id.VideoId)
+			foundMap[t.ReviewVideoId]++
+			totalFound++
 		}
-
-		nextTrackRows[i].Source = "Google Search"
-		nextTrackRows[i].FoundTrackInfo = res2[0].Title
-		nextTrackRows[i].SpotifyUrl = res2[0].Link
-		toAddByYear[year] = append(toAddByYear[year], uri)
-		foundMap[t.VideoId]++
-		totalFound++
 	}
 
 	fmt.Printf("Found %d / %d tracks\n", totalFound, len(nextTrackRows))
 
-	myPlaylists := spc.GetMyPlaylists()
+	myPlaylists := yt.LoadAllPlaylists()
 	fmt.Printf("Loaded %d playlists\n", len(myPlaylists))
-	playlistsByYear := map[int]spotify.SpotifyPlaylist{}
+	playlistsByYear := map[string]youtube.Playlist{}
 	for _, p := range myPlaylists {
-		if strings.HasPrefix(p.Name, spotify.YoutubePlaylistPrefix) {
-			yearStr := strings.TrimPrefix(p.Name, spotify.YoutubePlaylistPrefix)
-			year, err := strconv.Atoi(yearStr)
-			if err == nil {
-				playlistsByYear[year] = p
-			}
+		if strings.HasPrefix(p.Snippet.Title, youtube.PlaylistPrefix) {
+			year := strings.TrimPrefix(p.Snippet.Title, youtube.PlaylistPrefix)
+			playlistsByYear[year] = p
 		}
 	}
 	fmt.Printf("Found %d Melon (Deluxe) playlists\n", len(playlistsByYear))
 
-	yearsSorted := []int{}
 	for year := range toAddByYear {
-		yearsSorted = append(yearsSorted, year)
-	}
-	slices.Sort(yearsSorted) // sorts in ascending, which is what I want
-	// so that spotify will order playlists from oldest to newest
-	for _, year := range yearsSorted {
-		uris := toAddByYear[year]
+		videoIds := toAddByYear[year]
 
 		playlist, ok := playlistsByYear[year]
-		fmt.Printf("spotify playlist for %d exists: %t\n", year, ok)
+		fmt.Printf("Youtube playlist for %s exists: %t\n", year, ok)
 
 		newTracks := []string{}
 		if !ok {
-			fmt.Printf("creating spotify playlist: %d\n", year)
-			playlistName := spotify.YoutubePlaylistPrefix + strconv.Itoa(year)
-			playlist = spc.CreatePlaylist(playlistName)
-			newTracks = uris
+			fmt.Printf("creating Youtube playlist: %s\n", year)
+			playlistName := youtube.PlaylistPrefix + year
+			playlist = yt.CreatePlaylist(playlistName, "")
+			// addem all
+			newTracks = videoIds
 		} else {
-			currentTracks := spc.GetPlaylistItems(playlist.Id)
-			fmt.Printf("loaded %d tracks for playlist: %d\n", len(currentTracks), year)
+			currentTracks := yt.LoadAllPlaylistItems(playlist.Id)
+			fmt.Printf("loaded %d tracks for playlist: %s\n", len(currentTracks), year)
 
+			// only add not yet added
 			currentTrackMap := map[string]bool{}
 			for _, t := range currentTracks {
-				currentTrackMap[t.Track.Uri] = true
+				currentTrackMap[t.Snippet.ResourceId.VideoId] = true
 			}
-			for _, uri := range uris {
-				if !currentTrackMap[uri] {
-					newTracks = append(newTracks, uri)
+			for _, vid := range videoIds {
+				if !currentTrackMap[vid] {
+					newTracks = append(newTracks, vid)
 				}
 			}
 		}
 
-		fmt.Printf("adding %d tracks to playlist %s\n", len(newTracks), playlist.Name)
-		spc.AddPlaylistItems(playlist.Id, newTracks)
+		fmt.Printf("adding %d tracks to playlist %s\n", len(newTracks), playlist.Snippet.Title)
+		yt.AddPlaylistItems(playlist.Id, newTracks)
 	}
 
 	fmt.Printf("Adding %d track rows to google sheets\n", len(nextTrackRows))
-	gs.AddYoutubeTracks(nextTrackRows)
+	gs.AddFoundTracks(nextTrackRows)
+
 	for i, v := range nextVideoRows {
 		nextVideoRows[i].FoundTracks = foundMap[v.Id]
 	}
 
 	fmt.Printf("Adding %d video rows to google sheets\n", len(nextVideoRows))
-	gs.AddYoutubeVideos(nextVideoRows)
+	gs.AddTonysVideos(nextVideoRows)
 }
 
 func main() {

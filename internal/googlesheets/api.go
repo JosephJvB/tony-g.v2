@@ -3,14 +3,13 @@ package googlesheets
 import (
 	"context"
 	"log"
-	"os"
 
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
 
-const SpreadsheetId = "1F5DXCTNZbDy6mFE3Sp1prvU2SfpoqK0dZRsXVHiiOfo"
+const SpreadsheetId = "1PFjWpTSX5iZH-0B1yUHSuqO9ixGW3LnBLFiv52bYcIg"
 
 type SheetConfig struct {
 	Name        string
@@ -18,19 +17,19 @@ type SheetConfig struct {
 	AllRowRange string
 }
 
-var YoutubeVideoSheet = SheetConfig{
+var TonysVideoSheet = SheetConfig{
 	Name:        "Tony's Videos",
-	Id:          1873504560,
+	Id:          571234434,
 	AllRowRange: "A2:F",
 }
-var YoutubeTrackSheet = SheetConfig{
+var FoundTrackSheet = SheetConfig{
 	Name:        "Found Tracks",
-	Id:          1393416153,
+	Id:          1461864733,
 	AllRowRange: "A2:I",
 }
-var TestYoutubeTrackSheet = SheetConfig{
+var TESTTrackSheet = SheetConfig{
 	Name:        "TEST",
-	Id:          1316778886,
+	Id:          407333682,
 	AllRowRange: "A2:I",
 }
 
@@ -66,8 +65,8 @@ func NewClient(secrets Secrets) GoogleSheetsClient {
 	}
 }
 
-func (gs *GoogleSheetsClient) GetYoutubeVideos() []TonyVideoRow {
-	rows := gs.getRows(YoutubeVideoSheet)
+func (gs *GoogleSheetsClient) GetTonysVideos() []TonyVideoRow {
+	rows := gs.getRows(TonysVideoSheet)
 
 	videos := []TonyVideoRow{}
 	for _, row := range rows {
@@ -79,7 +78,7 @@ func (gs *GoogleSheetsClient) GetYoutubeVideos() []TonyVideoRow {
 	return videos
 }
 
-func (gs *GoogleSheetsClient) AddYoutubeVideos(nextRows []TonyVideoRow) {
+func (gs *GoogleSheetsClient) AddTonysVideos(nextRows []TonyVideoRow) {
 	// sheets.ValueRange.Values needs interfaces
 	rows := make([][]interface{}, len(nextRows))
 	for _, t := range nextRows {
@@ -88,11 +87,11 @@ func (gs *GoogleSheetsClient) AddYoutubeVideos(nextRows []TonyVideoRow) {
 		rows = append(rows, r)
 	}
 
-	gs.addRows(YoutubeVideoSheet, rows)
+	gs.addRows(TonysVideoSheet, rows)
 }
 
-func (gs *GoogleSheetsClient) GetYoutubeTracks() []FoundTrackRow {
-	rows := gs.getRows(YoutubeTrackSheet)
+func (gs *GoogleSheetsClient) GetFoundTracks() []FoundTrackRow {
+	rows := gs.getRows(FoundTrackSheet)
 
 	tracks := []FoundTrackRow{}
 	for _, row := range rows {
@@ -104,7 +103,7 @@ func (gs *GoogleSheetsClient) GetYoutubeTracks() []FoundTrackRow {
 	return tracks
 }
 
-func (gs *GoogleSheetsClient) AddYoutubeTracks(nextRows []FoundTrackRow) {
+func (gs *GoogleSheetsClient) AddFoundTracks(nextRows []FoundTrackRow) {
 	// sheets.ValueRange.Values needs interfaces
 	rows := make([][]interface{}, len(nextRows))
 	for _, t := range nextRows {
@@ -113,20 +112,7 @@ func (gs *GoogleSheetsClient) AddYoutubeTracks(nextRows []FoundTrackRow) {
 		rows = append(rows, r)
 	}
 
-	gs.addRows(YoutubeTrackSheet, rows)
-}
-
-func (gs *GoogleSheetsClient) GetTESTTracks() []FoundTrackRow {
-	rows := gs.getRows(TestYoutubeTrackSheet)
-
-	tracks := []FoundTrackRow{}
-	for _, row := range rows {
-		r := RowToFoundTrack(row)
-
-		tracks = append(tracks, r)
-	}
-
-	return tracks
+	gs.addRows(FoundTrackSheet, rows)
 }
 
 func (gs *GoogleSheetsClient) getRows(cfg SheetConfig) [][]interface{} {
@@ -140,7 +126,7 @@ func (gs *GoogleSheetsClient) getRows(cfg SheetConfig) [][]interface{} {
 		// happened twice in a row! And then stopped
 		// something like this
 		// googleapi: Error 500: Internal error encountered., backendError
-		os.WriteFile("./data/googlesheets-error.txt", []byte(err.Error()), 0666)
+		// os.WriteFile("./data/googlesheets-error.txt", []byte(err.Error()), 0666)
 		log.Fatal(err)
 	}
 

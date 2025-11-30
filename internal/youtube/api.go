@@ -13,6 +13,7 @@ const BaseUrl = "https://www.googleapis.com/youtube/v3"
 const TonysWeeklyPlaylistId = "PLP4CSgl7K7or84AAhr7zlLNpghEnKWu2c"
 const MyChannelId = "UCHySUV2IA90V2IVxpLkGavQ"
 const MusicTopicId = "/m/04rlf"
+const PlaylistPrefix = "Now That's What I Call Melon Music: "
 
 type YoutubeClient struct {
 	apiKey       string
@@ -319,7 +320,7 @@ type FindTrackInput struct {
 }
 
 // https://developers.google.com/youtube/v3/docs/search/list
-func (yt *YoutubeClient) FindVideo(t FindTrackInput) []SearchResult {
+func (yt *YoutubeClient) FindTrack(t FindTrackInput) []SearchResult {
 	apiUrl := BaseUrl + "/search"
 
 	queryPart := url.Values{}

@@ -228,7 +228,7 @@ func TestYoutube(t *testing.T) {
 			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
 		})
 
-		results := yt.FindVideo(FindTrackInput{
+		results := yt.FindTrack(FindTrackInput{
 			Title:  "Grow Wings and Fly",
 			Artist: "King Gizzard and the Lizard Wizard",
 		})
@@ -262,7 +262,7 @@ func TestYoutube(t *testing.T) {
 			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
 		})
 
-		results := yt.FindVideo(FindTrackInput{
+		results := yt.FindTrack(FindTrackInput{
 			Title:  "Blinding Lights",
 			Artist: "The Weeknd",
 		})

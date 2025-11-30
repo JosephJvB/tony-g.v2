@@ -42,7 +42,7 @@ func TestGoogleSheets(t *testing.T) {
 			PrivateKey: fixedKey,
 		})
 
-		tracks := gs.GetYoutubeTracks()
+		tracks := gs.GetFoundTracks()
 
 		if len(tracks) == 0 {
 			t.Errorf("Expected parsed videos to be loaded")
@@ -90,7 +90,7 @@ func TestGoogleSheets(t *testing.T) {
 			},
 		}
 
-		gs.AddYoutubeTracks(toAdd)
+		gs.AddFoundTracks(toAdd)
 	})
 
 	t.Run("can update 4 source and info columns", func(t *testing.T) {
@@ -132,7 +132,7 @@ func TestGoogleSheets(t *testing.T) {
 		v4[1] = "Found this one from Google"
 		values[3] = v4
 
-		gs.updateValues(TestYoutubeTrackSheet, "C2:D", values)
+		gs.updateValues(TESTTrackSheet, "C2:D", values)
 	})
 
 	// in case I wanna not update all cells... but maybe I can still update all cells
@@ -177,7 +177,6 @@ func TestGoogleSheets(t *testing.T) {
 
 		notation := fmt.Sprintf("C%d:D", 2+3)
 
-		gs.updateValues(TestYoutubeTrackSheet, notation, values)
+		gs.updateValues(TESTTrackSheet, notation, values)
 	})
-
 }

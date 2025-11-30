@@ -333,3 +333,8 @@ POST https://oauth2.googleapis.com/token
       - consider which order items are added
   - New Google Sheets Data
   - Shall I keep sorting with the Google Script? Or do it in code. I think it's better in code right. I'll do that later tho lol.
+
+made a new spreadsheet for fear of messing up live one.
+  - need a new apps script
+  - I should really back this data up too since if I delete the sheet or w/e I'm stuffed
+    - save to CSV? Probably...
