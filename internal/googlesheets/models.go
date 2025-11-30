@@ -2,30 +2,9 @@ package googlesheets
 
 import (
 	"strconv"
-	"tony-g/internal/stringutil"
 )
 
-type AppleTrackRow struct {
-	Title      string
-	Artist     string
-	Album      string
-	SpotifyUrl string
-	Year       int
-	AddedAt    string
-}
-
-func (atr *AppleTrackRow) GetAppleTrackId() string {
-	idParts := stringutil.AppleIdParts{
-		Title:  atr.Title,
-		Artist: atr.Artist,
-		Album:  atr.Album,
-		Year:   atr.Year,
-	}
-
-	return stringutil.MakeAppleId(idParts)
-}
-
-type YoutubeVideoRow struct {
+type TonyVideoRow struct {
 	Id          string
 	Title       string
 	PublishedAt string
@@ -33,48 +12,19 @@ type YoutubeVideoRow struct {
 	FoundTracks int
 	AddedAt     string
 }
-type YoutubeTrackRow struct {
-	Title            string
-	Artist           string
-	Source           string
-	FoundTrackInfo   string
-	SpotifyUrl       string
-	Link             string
-	VideoId          string
-	VideoPublishDate string
-	AddedAt          string
+type FoundTrackRow struct {
+	Title                  string
+	Artist                 string
+	FoundTrackInfo         string
+	TrackVideoId           string
+	Link                   string
+	ReviewVideoId          string
+	ReviewVideoPublishDate string
+	AddedAt                string
+	Playlist               string
 }
 
-func RowToAppleTrack(row []interface{}) AppleTrackRow {
-	yearStr := row[4].(string)
-	year, err := strconv.Atoi(yearStr)
-	if err != nil {
-		year = -1
-	}
-
-	return AppleTrackRow{
-		Title:      row[0].(string),
-		Artist:     row[1].(string),
-		Album:      row[2].(string),
-		SpotifyUrl: row[3].(string),
-		Year:       year,
-		AddedAt:    row[5].(string),
-	}
-}
-
-func AppleTrackToRow(track AppleTrackRow) []interface{} {
-	r := make([]interface{}, 6)
-	r[0] = track.Title
-	r[1] = track.Artist
-	r[2] = track.Album
-	r[3] = track.SpotifyUrl
-	r[4] = strconv.Itoa(track.Year)
-	r[5] = track.AddedAt
-
-	return r
-}
-
-func RowToYoutubeVideo(row []interface{}) YoutubeVideoRow {
+func RowToTonyVideo(row []interface{}) TonyVideoRow {
 	ttStr := row[3].(string)
 	tt, err := strconv.Atoi(ttStr)
 	if err != nil {
@@ -86,7 +36,7 @@ func RowToYoutubeVideo(row []interface{}) YoutubeVideoRow {
 		ft = -1
 	}
 
-	return YoutubeVideoRow{
+	return TonyVideoRow{
 		Id:          row[0].(string),
 		Title:       row[1].(string),
 		PublishedAt: row[2].(string),
@@ -96,7 +46,7 @@ func RowToYoutubeVideo(row []interface{}) YoutubeVideoRow {
 	}
 }
 
-func YoutubeVideoToRow(video YoutubeVideoRow) []interface{} {
+func TonyVideoToRow(video TonyVideoRow) []interface{} {
 	r := make([]interface{}, 6)
 	r[0] = video.Id
 	r[1] = video.Title
@@ -108,31 +58,31 @@ func YoutubeVideoToRow(video YoutubeVideoRow) []interface{} {
 	return r
 }
 
-func RowToYoutubeTrack(row []interface{}) YoutubeTrackRow {
-	return YoutubeTrackRow{
-		Title:            row[0].(string),
-		Artist:           row[1].(string),
-		Source:           row[2].(string),
-		FoundTrackInfo:   row[3].(string),
-		SpotifyUrl:       row[4].(string),
-		Link:             row[5].(string),
-		VideoId:          row[6].(string),
-		VideoPublishDate: row[7].(string),
-		AddedAt:          row[8].(string),
+func RowToFoundTrack(row []interface{}) FoundTrackRow {
+	return FoundTrackRow{
+		Title:                  row[0].(string),
+		Artist:                 row[1].(string),
+		FoundTrackInfo:         row[2].(string),
+		TrackVideoId:           row[3].(string),
+		Link:                   row[4].(string),
+		ReviewVideoId:          row[5].(string),
+		ReviewVideoPublishDate: row[6].(string),
+		AddedAt:                row[7].(string),
+		Playlist:               row[8].(string),
 	}
 }
 
-func YoutubeTrackToRow(track YoutubeTrackRow) []interface{} {
+func FoundTrackToRow(track FoundTrackRow) []interface{} {
 	r := make([]interface{}, 9)
 	r[0] = track.Title
 	r[1] = track.Artist
-	r[2] = track.Source
-	r[3] = track.FoundTrackInfo
-	r[4] = track.SpotifyUrl
-	r[5] = track.Link
-	r[6] = track.VideoId
-	r[7] = track.VideoPublishDate
-	r[8] = track.AddedAt
+	r[2] = track.FoundTrackInfo
+	r[3] = track.TrackVideoId
+	r[4] = track.Link
+	r[5] = track.ReviewVideoId
+	r[6] = track.ReviewVideoPublishDate
+	r[7] = track.AddedAt
+	r[8] = track.Playlist
 
 	return r
 }

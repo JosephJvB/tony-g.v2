@@ -18,20 +18,14 @@ type SheetConfig struct {
 	AllRowRange string
 }
 
-var AppleTrackSheet = SheetConfig{
-	Name:        "Apple Tracks",
-	Id:          1745426463,
-	AllRowRange: "A2:F",
-}
-
 var YoutubeVideoSheet = SheetConfig{
-	Name:        "Youtube Videos",
-	Id:          1649352476,
+	Name:        "Tony's Videos",
+	Id:          1873504560,
 	AllRowRange: "A2:F",
 }
 var YoutubeTrackSheet = SheetConfig{
-	Name:        "Youtube Tracks",
-	Id:          1330220669,
+	Name:        "Found Tracks",
+	Id:          1393416153,
 	AllRowRange: "A2:I",
 }
 var TestYoutubeTrackSheet = SheetConfig{
@@ -72,37 +66,12 @@ func NewClient(secrets Secrets) GoogleSheetsClient {
 	}
 }
 
-func (gs *GoogleSheetsClient) GetAppleTracks() []AppleTrackRow {
-	rows := gs.getRows(AppleTrackSheet)
-
-	tracks := []AppleTrackRow{}
-	for _, row := range rows {
-		r := RowToAppleTrack(row)
-
-		tracks = append(tracks, r)
-	}
-
-	return tracks
-}
-
-func (gs *GoogleSheetsClient) AddAppleTracks(nextRows []AppleTrackRow) {
-	// sheets.ValueRange.Values needs interfaces
-	rows := make([][]interface{}, len(nextRows))
-	for _, t := range nextRows {
-		r := AppleTrackToRow(t)
-
-		rows = append(rows, r)
-	}
-
-	gs.addRows(AppleTrackSheet, rows)
-}
-
-func (gs *GoogleSheetsClient) GetYoutubeVideos() []YoutubeVideoRow {
+func (gs *GoogleSheetsClient) GetYoutubeVideos() []TonyVideoRow {
 	rows := gs.getRows(YoutubeVideoSheet)
 
-	videos := []YoutubeVideoRow{}
+	videos := []TonyVideoRow{}
 	for _, row := range rows {
-		r := RowToYoutubeVideo(row)
+		r := RowToTonyVideo(row)
 
 		videos = append(videos, r)
 	}
@@ -110,11 +79,11 @@ func (gs *GoogleSheetsClient) GetYoutubeVideos() []YoutubeVideoRow {
 	return videos
 }
 
-func (gs *GoogleSheetsClient) AddYoutubeVideos(nextRows []YoutubeVideoRow) {
+func (gs *GoogleSheetsClient) AddYoutubeVideos(nextRows []TonyVideoRow) {
 	// sheets.ValueRange.Values needs interfaces
 	rows := make([][]interface{}, len(nextRows))
 	for _, t := range nextRows {
-		r := YoutubeVideoToRow(t)
+		r := TonyVideoToRow(t)
 
 		rows = append(rows, r)
 	}
@@ -122,12 +91,12 @@ func (gs *GoogleSheetsClient) AddYoutubeVideos(nextRows []YoutubeVideoRow) {
 	gs.addRows(YoutubeVideoSheet, rows)
 }
 
-func (gs *GoogleSheetsClient) GetYoutubeTracks() []YoutubeTrackRow {
+func (gs *GoogleSheetsClient) GetYoutubeTracks() []FoundTrackRow {
 	rows := gs.getRows(YoutubeTrackSheet)
 
-	tracks := []YoutubeTrackRow{}
+	tracks := []FoundTrackRow{}
 	for _, row := range rows {
-		r := RowToYoutubeTrack(row)
+		r := RowToFoundTrack(row)
 
 		tracks = append(tracks, r)
 	}
@@ -135,11 +104,11 @@ func (gs *GoogleSheetsClient) GetYoutubeTracks() []YoutubeTrackRow {
 	return tracks
 }
 
-func (gs *GoogleSheetsClient) AddYoutubeTracks(nextRows []YoutubeTrackRow) {
+func (gs *GoogleSheetsClient) AddYoutubeTracks(nextRows []FoundTrackRow) {
 	// sheets.ValueRange.Values needs interfaces
 	rows := make([][]interface{}, len(nextRows))
 	for _, t := range nextRows {
-		r := YoutubeTrackToRow(t)
+		r := FoundTrackToRow(t)
 
 		rows = append(rows, r)
 	}
@@ -147,43 +116,17 @@ func (gs *GoogleSheetsClient) AddYoutubeTracks(nextRows []YoutubeTrackRow) {
 	gs.addRows(YoutubeTrackSheet, rows)
 }
 
-func (gs *GoogleSheetsClient) UpdateYoutubeTracksSourceInfo(nextRows []YoutubeTrackRow) {
-	values := make([][]interface{}, len(nextRows))
-	for _, t := range nextRows {
-		v := make([]interface{}, 2)
-		v[0] = t.Source
-		v[1] = t.FoundTrackInfo
-
-		values = append(values, v)
-	}
-
-	gs.updateValues(YoutubeTrackSheet, "C2:D", values)
-}
-
-func (gs *GoogleSheetsClient) GetTESTTracks() []YoutubeTrackRow {
+func (gs *GoogleSheetsClient) GetTESTTracks() []FoundTrackRow {
 	rows := gs.getRows(TestYoutubeTrackSheet)
 
-	tracks := []YoutubeTrackRow{}
+	tracks := []FoundTrackRow{}
 	for _, row := range rows {
-		r := RowToYoutubeTrack(row)
+		r := RowToFoundTrack(row)
 
 		tracks = append(tracks, r)
 	}
 
 	return tracks
-}
-
-func (gs *GoogleSheetsClient) UpdateTESTSourceInfo(nextRows []YoutubeTrackRow) {
-	values := make([][]interface{}, len(nextRows))
-	for _, t := range nextRows {
-		v := make([]interface{}, 2)
-		v[0] = t.Source
-		v[1] = t.FoundTrackInfo
-
-		values = append(values, v)
-	}
-
-	gs.updateValues(TestYoutubeTrackSheet, "C2:D", values)
 }
 
 func (gs *GoogleSheetsClient) getRows(cfg SheetConfig) [][]interface{} {
@@ -220,6 +163,7 @@ func (gs *GoogleSheetsClient) addRows(cfg SheetConfig, rows [][]interface{}) {
 	req.Do()
 }
 
+// prev used to update missing Source for all rows
 func (gs *GoogleSheetsClient) updateValues(cfg SheetConfig, cellRange string, values [][]interface{}) {
 	valueRange := sheets.ValueRange{
 		MajorDimension: "ROWS",
