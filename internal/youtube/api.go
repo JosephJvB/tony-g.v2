@@ -265,6 +265,7 @@ func (yt *YoutubeClient) CreatePlaylist(title string, description string) Playli
 	return responseBody
 }
 
+// No batch API!
 func (yt *YoutubeClient) AddPlaylistItems(playlistId string, videoIds []string) {
 	if yt.accessToken == "" {
 		yt.setAccessToken()

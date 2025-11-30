@@ -338,3 +338,7 @@ made a new spreadsheet for fear of messing up live one.
   - need a new apps script
   - I should really back this data up too since if I delete the sheet or w/e I'm stuffed
     - save to CSV? Probably...
+
+highly likely gonna have rate limit issues with youtube apis during migration
+  - search
+  - addPlaylistItem (no batch method, have to be 1 by 1)
