@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -178,5 +179,41 @@ func TestGoogleSheets(t *testing.T) {
 		notation := fmt.Sprintf("C%d:D", 2+3)
 
 		gs.updateValues(TESTTrackSheet, notation, values)
+	})
+
+	t.Run("how does row overwrite work", func(t *testing.T) {
+		t.Skip("skip test calling real google sheets api")
+
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			panic(err)
+		}
+
+		// .env file does not handle private keys gracefully
+		// probably would be better saved to a file than in .env. Oh well.
+		invalidKey := os.Getenv("GOOGLE_SHEETS_PRIVATE_KEY")
+		fixedKey := strings.ReplaceAll(invalidKey, "__n__", "\n")
+
+		gs := NewClient(Secrets{
+			Email:      os.Getenv("GOOGLE_SHEETS_EMAIL"),
+			PrivateKey: fixedKey,
+		})
+
+		fakeCfg := SheetConfig{
+			Name:        "row overwrite",
+			Id:          1752644874,
+			AllRowRange: "A2:B",
+		}
+
+		rows := make([][]interface{}, 4)
+		for i := 0; i < 4; i++ {
+			r := make([]interface{}, 2)
+			v := strconv.Itoa(i)
+			r[0] = v
+			r[1] = v
+			rows = append(rows, r)
+		}
+
+		gs.updateValues(fakeCfg, "A2:B", rows)
 	})
 }

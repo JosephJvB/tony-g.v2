@@ -87,7 +87,7 @@ func (gs *GoogleSheetsClient) AddTonysVideos(nextRows []TonyVideoRow) {
 		rows = append(rows, r)
 	}
 
-	gs.addRows(TonysVideoSheet, rows)
+	gs.appendRows(TonysVideoSheet, rows)
 }
 
 func (gs *GoogleSheetsClient) GetFoundTracks() []FoundTrackRow {
@@ -112,7 +112,7 @@ func (gs *GoogleSheetsClient) AddFoundTracks(nextRows []FoundTrackRow) {
 		rows = append(rows, r)
 	}
 
-	gs.addRows(FoundTrackSheet, rows)
+	gs.appendRows(FoundTrackSheet, rows)
 }
 
 func (gs *GoogleSheetsClient) getRows(cfg SheetConfig) [][]interface{} {
@@ -133,7 +133,7 @@ func (gs *GoogleSheetsClient) getRows(cfg SheetConfig) [][]interface{} {
 	return resp.Values
 }
 
-func (gs *GoogleSheetsClient) addRows(cfg SheetConfig, rows [][]interface{}) {
+func (gs *GoogleSheetsClient) appendRows(cfg SheetConfig, rows [][]interface{}) {
 	// set next rows
 	valueRange := sheets.ValueRange{
 		MajorDimension: "ROWS",
@@ -144,12 +144,13 @@ func (gs *GoogleSheetsClient) addRows(cfg SheetConfig, rows [][]interface{}) {
 	req := gs.sheetsService.Spreadsheets.Values.Append(SpreadsheetId, rowRange, &valueRange)
 	// is this the only way to add these params?
 	req.ValueInputOption("RAW")
+	// other option is "OVERWRITE"
+	// but that only overwrites if there's empty cells, kinda annoying
 	req.InsertDataOption("INSERT_ROWS")
 
 	req.Do()
 }
 
-// prev used to update missing Source for all rows
 func (gs *GoogleSheetsClient) updateValues(cfg SheetConfig, cellRange string, values [][]interface{}) {
 	valueRange := sheets.ValueRange{
 		MajorDimension: "ROWS",
