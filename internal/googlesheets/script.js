@@ -7,20 +7,20 @@
  * delete all rows
  * set new sorted rows
  * using the googlesheets go api I have
+ *
+ * column numbers are NOT zero index
+ * ie: count starts at 1
  */
 function onChange(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet()
   var sheet = ss.getActiveSheet()
 
   switch (sheet.getName()) {
-    case 'Apple Tracks':
-      sortAppleTracks(sheet)
+    case "Tony's Videos":
+      sortTonysVideos(sheet)
       break
-    case 'Youtube Videos':
-      sortYoutubeVideos(sheet)
-      break
-    case 'Youtube Tracks':
-      sortYoutubeTracks(sheet)
+    case 'Found Tracks':
+      sortFoundTracks(sheet)
       break
     case 'TEST':
       sortTest(sheet)
@@ -28,31 +28,24 @@ function onChange(e) {
   }
 }
 
-function sortAppleTracks(sheet) {
-  var range = sheet.getRange('A2:F')
-  range.sort([
-    { column: 5, ascending: false }, // year
-    { column: 6, ascending: false }, // added_at
-  ])
-}
-function sortYoutubeVideos(sheet) {
+function sortTonysVideos(sheet) {
   var range = sheet.getRange('A2:F')
   range.sort([
     { column: 3, ascending: false }, // published_at
-    { column: 6, ascending: false }, // added_at
+    // { column: 7, ascending: false }, // added_at
   ])
 }
-function sortYoutubeTracks(sheet) {
+function sortFoundTracks(sheet) {
   var range = sheet.getRange('A2:I')
   range.sort([
-    { column: 8, ascending: false }, // videopublish date
-    { column: 9, ascending: false }, // added_at
+    { column: 7, ascending: false }, // videopublish date
+    { column: 8, ascending: false }, // added_at
   ])
 }
 function sortTest(sheet) {
-  var range = sheet.getRange('A2:I')
-  range.sort([
-    { column: 8, ascending: false }, // videopublish date
-    { column: 9, ascending: false }, // added_at
-  ])
+  // var range = sheet.getRange('A2:I')
+  // range.sort([
+  //   { column: 8, ascending: false }, // videopublish date
+  //   { column: 9, ascending: false }, // added_at
+  // ])
 }

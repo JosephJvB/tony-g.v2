@@ -145,7 +145,8 @@ func (gs *GoogleSheetsClient) appendRows(cfg SheetConfig, rows [][]interface{}) 
 	// is this the only way to add these params?
 	req.ValueInputOption("RAW")
 	// other option is "OVERWRITE"
-	// but that only overwrites if there's empty cells, kinda annoying
+	// but that only overwrites if there's empty cells, not what I expected
+	// I guess it's "Append" method after all
 	req.InsertDataOption("INSERT_ROWS")
 
 	req.Do()
