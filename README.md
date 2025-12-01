@@ -342,3 +342,36 @@ made a new spreadsheet for fear of messing up live one.
 highly likely gonna have rate limit issues with youtube apis during migration
   - search
   - addPlaylistItem (no batch method, have to be 1 by 1)
+
+x2 videos
+x14 songs
+took 374 quota / 10000
+= ~187 per video
+= ~53 videos a day? Not bad!
+
+Will improve if there are more youtube urls in video descriptions
+I think this batch had zero youtube urls in desc
+
+427 videos total
+= about 9 days? Kinda slow! But I'm patient
+
+And let's be real, there are gonna be more edge cases I find as I go deeper into the backlog
+So I have to be prepared to delete progress and start again with updated code
+
+| youtubeApiMethod | quotaCost |
+| --- | --- |
+| Search:List | 100 |
+| Videos:List | 1 |
+| Playlists:List | 1 |
+| Playlists:Insert | 50 |
+| PlaylistItems:Insert | 50 |
+| PlaylistItems:List | 1 |
+
+
+Yeah OK so how do I handle where youtube search returns a bogus result
+How do I determine if it's a bad match? Does it have a relevance score in search result?
+It doesn't look like it: https://developers.google.com/youtube/v3/docs/search#resource
+
+Another decent use case for AI: check search query and search result are close semantic match
+
+TODO: check some of the rows I marked yellow from first batch.

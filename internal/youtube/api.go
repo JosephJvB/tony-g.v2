@@ -283,12 +283,14 @@ func (yt *YoutubeClient) AddPlaylistItems(playlistId string, videoIds []string) 
 	}
 
 	for _, videoId := range videoIds {
-		addPlaylistItem(yt.accessToken, playlistId, videoId)
+		// always add items at the start of a playlist
+		// ie: newest added songs are at the start
+		addPlaylistItem(yt.accessToken, playlistId, videoId, 0)
 	}
 }
 
 // TODO: define input type rather than 3 strings
-func addPlaylistItem(accessToken string, playlistId string, videoId string) {
+func addPlaylistItem(accessToken string, playlistId string, videoId string, position int) {
 	apiUrl := BaseUrl + "/playlistItems"
 
 	queryPart := url.Values{}
@@ -303,6 +305,7 @@ func addPlaylistItem(accessToken string, playlistId string, videoId string) {
 				"kind":    "youtube#video",
 				"videoId": videoId,
 			},
+			"position": position,
 		},
 	}
 	postBuffer, _ := json.Marshal(postData)
@@ -340,7 +343,12 @@ func (yt *YoutubeClient) findTrack(t FindTrackInput) []SearchResult {
 	queryPart.Set("maxResults", "1")
 	// videos often have extra audio stuff you don't want
 	// see "Blinding Lights by the Weeknd"
-	queryPart.Set("q", t.Artist+" - "+t.Title+" (official audio)")
+	// this works for songs by large artists who follow some conventions like (offical audio)
+	// fails for smaller artists who don't have big public channels and don't follow those naming conventions..
+	queryPart.Set("q", t.Artist+" "+t.Title+" (official audio)")
+	// tried this, api ref. says you can negate q params, I don't want music video
+	// but not working for me
+	// queryPart.Set("q", t.Artist+" "+t.Title+" audio -video")
 	queryPart.Set("topicId", MusicTopicId)
 	queryPart.Set("key", yt.apiKey)
 	queryPart.Set("type", "video")

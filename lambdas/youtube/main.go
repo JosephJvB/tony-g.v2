@@ -90,7 +90,9 @@ func handleLambdaEvent(evt Evt) {
 
 	nextTrackRows := []googlesheets.FoundTrackRow{}
 	nextVideoRows := []googlesheets.TonyVideoRow{}
-	upper := int(math.Min(float64(len(nextVideos)), 1)) // max 5 videos
+	// set max amount of videos to process in one go
+	// in case there are a lot - we dont wanna try do too many and fail due to google api quota
+	upper := int(math.Min(float64(len(nextVideos)), 5))
 	nextVideos = nextVideos[0:upper]
 	for i, v := range nextVideos {
 		fmt.Printf("Getting tracks from description %d/%d\r", i+1, len(nextVideos))
@@ -148,7 +150,7 @@ func handleLambdaEvent(evt Evt) {
 			// TODO: batch ids. Idk about size limit.
 			// however this request is really cheap
 			// quota + 1, where as search is like 100
-			// so even if not batched, this is still super good.
+			// so even if not batched, this is still a large improvement
 			res := yt.GetVideosById([]string{
 				idFromLink,
 			})

@@ -390,4 +390,77 @@ func TestYoutube(t *testing.T) {
 			panic(err)
 		}
 	})
+
+	t.Run("FindVideo works: quays", func(t *testing.T) {
+		t.Skip("skip test calling YoutubeAPI")
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+
+		yt := NewClient(YtClientConfig{
+			ApiKey:       os.Getenv("YOUTUBE_API_KEY"),
+			ClientId:     os.Getenv("YOUTUBE_CLIENT_ID"),
+			ClientSecret: os.Getenv("YOUTUBE_CLIENT_SECRET"),
+			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
+		})
+
+		// this could be a feat./ft. issue!
+		// time for da thingo
+		// yup exactement
+		results := yt.FindTrack(FindTrackInput{
+			Title: "Your Side",
+			// Title:  "Your Side ft. Nancy Andersen",
+			Artist: "Quays",
+		})
+
+		if len(results) == 0 {
+			log.Fatal("failed to find any search results for Your Side ft. Nancy Andersen")
+		}
+
+		b, err := json.MarshalIndent(results, "", "	")
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.WriteFile("../../data/youtube-search-results.json", b, 0666)
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("FindVideo works: sun kil moon", func(t *testing.T) {
+		t.Skip("skip test calling YoutubeAPI")
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+
+		yt := NewClient(YtClientConfig{
+			ApiKey:       os.Getenv("YOUTUBE_API_KEY"),
+			ClientId:     os.Getenv("YOUTUBE_CLIENT_ID"),
+			ClientSecret: os.Getenv("YOUTUBE_CLIENT_SECRET"),
+			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
+		})
+
+		// this one only works if I exclude the querypart about (official audio)
+		results := yt.FindTrack(FindTrackInput{
+			Title:  "God Bless Ohio",
+			Artist: "Sun Kil Moon",
+		})
+
+		if len(results) == 0 {
+			log.Fatal("failed to find any search results for God Bless Ohio")
+		}
+
+		b, err := json.MarshalIndent(results, "", "	")
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.WriteFile("../../data/youtube-search-results.json", b, 0666)
+		if err != nil {
+			panic(err)
+		}
+	})
 }
