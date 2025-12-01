@@ -332,6 +332,7 @@ func (yt *YoutubeClient) FindTrack(t FindTrackInput) []SearchResult {
 	queryPart.Set("q", t.Artist+" - "+t.Title+" (official audio)")
 	queryPart.Set("topicId", MusicTopicId)
 	queryPart.Set("key", yt.apiKey)
+	queryPart.Set("type", "video")
 
 	apiUrl += "?" + queryPart.Encode()
 
@@ -346,6 +347,9 @@ func (yt *YoutubeClient) FindTrack(t FindTrackInput) []SearchResult {
 		log.Print(b.String())
 		log.Fatalf("\nFindVideo failed failed: \"%s\"", resp.Status)
 	}
+
+	// out, _ := os.Create("../../data/find-track-results.json")
+	// io.Copy(out, resp.Body)
 
 	responseBody := ApiResponse[SearchResult]{}
 	json.NewDecoder(resp.Body).Decode(&responseBody)

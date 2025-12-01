@@ -12,11 +12,11 @@ import (
 	"tony-g/internal/ssm"
 	"tony-g/internal/youtube"
 
-	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/joho/godotenv"
 )
 
 type Evt struct {
-	VideoIds []string `json:"year"`
+	VideoIds []string `json:"videoIds"`
 }
 
 func handleLambdaEvent(evt Evt) {
@@ -41,6 +41,17 @@ func handleLambdaEvent(evt Evt) {
 		return
 	}
 
+	// sort oldest vids to newest so playlist order is nicely nicely
+	slices.SortFunc(tonysReviewVideos, func(a, z youtube.PlaylistItem) int {
+		if a.Snippet.PublishedAt < z.Snippet.PublishedAt {
+			return -1
+		}
+		if a.Snippet.PublishedAt > z.Snippet.PublishedAt {
+			return 1
+		}
+		return 0
+	})
+
 	gs := googlesheets.NewClient(googlesheets.Secrets{
 		Email:      paramClient.GoogleClientEmail.Value,
 		PrivateKey: paramClient.GooglePrivateKey.Value,
@@ -59,6 +70,7 @@ func handleLambdaEvent(evt Evt) {
 		if prevVideoMap[v.Snippet.ResourceId.VideoId] {
 			continue
 		}
+		// can use event.VideoIds to process a specific set of videos
 		if len(evt.VideoIds) > 0 {
 			if !slices.Contains(evt.VideoIds, v.Snippet.ResourceId.VideoId) {
 				continue
@@ -78,7 +90,7 @@ func handleLambdaEvent(evt Evt) {
 
 	nextTrackRows := []googlesheets.FoundTrackRow{}
 	nextVideoRows := []googlesheets.TonyVideoRow{}
-	upper := int(math.Min(float64(len(nextVideos)), 5)) // max 5 videos
+	upper := int(math.Min(float64(len(nextVideos)), 1)) // max 5 videos
 	nextVideos = nextVideos[0:upper]
 	for i, v := range nextVideos {
 		fmt.Printf("Getting tracks from description %d/%d\r", i+1, len(nextVideos))
@@ -130,15 +142,19 @@ func handleLambdaEvent(evt Evt) {
 	for i, t := range nextTrackRows {
 		fmt.Printf("finding track %d/%d\r", i+1, len(nextTrackRows))
 
-		idFromLink := youtube.GetYoutubeVideoID(t.Link)
-		if idFromLink != "" {
-			nextTrackRows[i].TrackVideoId = idFromLink
-			nextTrackRows[i].FoundTrackInfo = "id from link"
-			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], idFromLink)
-			foundMap[t.ReviewVideoId]++
-			totalFound++
-			continue
-		}
+		// have already found an issue where the youtube video from link in description is private
+		// so addPlaylistItem fails
+		// TODO: verify these are valid ID's before moving on
+		// ie: get video by id. Check privacy status
+		// https://developers.google.com/youtube/v3/docs/videos/list
+		// if idFromLink != "" {
+		// 	nextTrackRows[i].TrackVideoId = idFromLink
+		// 	nextTrackRows[i].FoundTrackInfo = "id from link"
+		// 	toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], idFromLink)
+		// 	foundMap[t.ReviewVideoId]++
+		// 	totalFound++
+		// 	continue
+		// }
 
 		res := yt.FindTrack(youtube.FindTrackInput{
 			Artist: t.Artist,
@@ -146,6 +162,7 @@ func handleLambdaEvent(evt Evt) {
 		})
 
 		if len(res) > 0 {
+			fmt.Println("found track", t.Artist, t.Title, res[0].Id.VideoId)
 			nextTrackRows[i].TrackVideoId = res[0].Id.VideoId
 			nextTrackRows[i].FoundTrackInfo = res[0].Snippet.Title
 			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], res[0].Id.VideoId)
@@ -165,7 +182,7 @@ func handleLambdaEvent(evt Evt) {
 			playlistsByYear[year] = p
 		}
 	}
-	fmt.Printf("Found %d Melon (Deluxe) playlists\n", len(playlistsByYear))
+	fmt.Printf("Found %d Melon playlists\n", len(playlistsByYear))
 
 	for year := range toAddByYear {
 		videoIds := toAddByYear[year]
@@ -197,6 +214,8 @@ func handleLambdaEvent(evt Evt) {
 		}
 
 		fmt.Printf("adding %d tracks to playlist %s\n", len(newTracks), playlist.Snippet.Title)
+		// this method is now adding playlist items 1 at time.
+		// google api quota issue probbo
 		yt.AddPlaylistItems(playlist.Id, newTracks)
 	}
 
@@ -206,11 +225,17 @@ func handleLambdaEvent(evt Evt) {
 	for i, v := range nextVideoRows {
 		nextVideoRows[i].FoundTracks = foundMap[v.Id]
 	}
-
 	fmt.Printf("Adding %d video rows to google sheets\n", len(nextVideoRows))
 	gs.AddTonysVideos(nextVideoRows)
 }
 
 func main() {
-	lambda.Start(handleLambdaEvent)
+	// lambda.Start(handleLambdaEvent)
+	err := godotenv.Load(".env")
+	if err != nil {
+		panic(err)
+	}
+	handleLambdaEvent(Evt{
+		VideoIds: []string{},
+	})
 }
