@@ -142,19 +142,25 @@ func handleLambdaEvent(evt Evt) {
 	for i, t := range nextTrackRows {
 		fmt.Printf("finding track %d/%d\r", i+1, len(nextTrackRows))
 
-		// have already found an issue where the youtube video from link in description is private
-		// so addPlaylistItem fails
-		// TODO: verify these are valid ID's before moving on
-		// ie: get video by id. Check privacy status
-		// https://developers.google.com/youtube/v3/docs/videos/list
-		// if idFromLink != "" {
-		// 	nextTrackRows[i].TrackVideoId = idFromLink
-		// 	nextTrackRows[i].FoundTrackInfo = "id from link"
-		// 	toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], idFromLink)
-		// 	foundMap[t.ReviewVideoId]++
-		// 	totalFound++
-		// 	continue
-		// }
+		idFromLink := youtube.GetYoutubeVideoID(t.Link)
+		if idFromLink != "" {
+			// solving issue where idFromLink was for a private video
+			// TODO: batch ids. Idk about size limit.
+			// however this request is really cheap
+			// quota + 1, where as search is like 100
+			// so even if not batched, this is still super good.
+			res := yt.GetVideosById([]string{
+				idFromLink,
+			})
+			if len(res) > 0 {
+				nextTrackRows[i].TrackVideoId = idFromLink
+				nextTrackRows[i].FoundTrackInfo = res[0].Snippet.Title
+				toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], idFromLink)
+				foundMap[t.ReviewVideoId]++
+				totalFound++
+				continue
+			}
+		}
 
 		res := yt.FindTrack(youtube.FindTrackInput{
 			Artist: t.Artist,
@@ -162,7 +168,6 @@ func handleLambdaEvent(evt Evt) {
 		})
 
 		if len(res) > 0 {
-			fmt.Println("found track", t.Artist, t.Title, res[0].Id.VideoId)
 			nextTrackRows[i].TrackVideoId = res[0].Id.VideoId
 			nextTrackRows[i].FoundTrackInfo = res[0].Snippet.Title
 			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], res[0].Id.VideoId)

@@ -52,6 +52,17 @@ type SearchResult struct {
 		Description string `json:"description"`
 	} `json:"snippet"`
 }
+
+// https://developers.google.com/youtube/v3/docs/videos#resource
+type VideoResource struct {
+	Id      string `json:"id"`
+	Snippet struct {
+		Title string `json:"title"`
+	} `json:"snippet"`
+	Status struct {
+		PrivacyStatus string `json:"privacyStatus"`
+	} `json:"status"`
+}
 type Playlist struct {
 	Id      string          `json:"id"`
 	Snippet PlaylistSnippet `json:"snippet"`
@@ -63,7 +74,7 @@ type Playlist struct {
 	} `json:"contentDetails"`
 }
 
-type ApiResponse[T Playlist | PlaylistItem | SearchResult] struct {
+type ApiResponse[T Playlist | PlaylistItem | SearchResult | VideoResource] struct {
 	NextPageToken string `json:"nextPageToken"`
 	Items         []T    `json:"items"`
 }
@@ -321,7 +332,7 @@ type FindTrackInput struct {
 }
 
 // https://developers.google.com/youtube/v3/docs/search/list
-func (yt *YoutubeClient) FindTrack(t FindTrackInput) []SearchResult {
+func (yt *YoutubeClient) findTrack(t FindTrackInput) []SearchResult {
 	apiUrl := BaseUrl + "/search"
 
 	queryPart := url.Values{}
@@ -352,6 +363,51 @@ func (yt *YoutubeClient) FindTrack(t FindTrackInput) []SearchResult {
 	// io.Copy(out, resp.Body)
 
 	responseBody := ApiResponse[SearchResult]{}
+	json.NewDecoder(resp.Body).Decode(&responseBody)
+
+	return responseBody.Items
+}
+
+func (yt *YoutubeClient) FindTrack(t FindTrackInput) []SearchResult {
+	results := yt.findTrack(t)
+	if len(results) > 0 {
+		return results
+	}
+
+	// TODO: fallback & clean song title logic if it's not working well
+	// https://github.com/JosephJvB/tony-g/blob/main/internal/spotify/api.go#L165
+
+	return results
+}
+
+func (yt *YoutubeClient) GetVideosById(videoIds []string) []VideoResource {
+	apiUrl := BaseUrl + "/videos"
+
+	queryPart := url.Values{}
+	queryPart.Set("part", "id,status,snippet")
+	queryPart.Set("key", yt.apiKey)
+	for _, id := range videoIds {
+		queryPart.Add("id", id)
+	}
+
+	apiUrl += "?" + queryPart.Encode()
+
+	resp, err := http.Get(apiUrl)
+	if err != nil {
+		panic(err)
+	}
+
+	if resp.StatusCode > 299 {
+		b := new(strings.Builder)
+		io.Copy(b, resp.Body)
+		log.Print(b.String())
+		log.Fatalf("\nFindVideo failed failed: \"%s\"", resp.Status)
+	}
+
+	// out, _ := os.Create("../../data/get-video-results.json")
+	// io.Copy(out, resp.Body)
+
+	responseBody := ApiResponse[VideoResource]{}
 	json.NewDecoder(resp.Body).Decode(&responseBody)
 
 	return responseBody.Items

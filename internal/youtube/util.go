@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"net/url"
+	"regexp"
 	"strings"
 )
 
@@ -46,4 +47,35 @@ func GetReviewVideos(items []PlaylistItem) []PlaylistItem {
 	}
 
 	return filtered
+}
+
+// from https://github.com/JosephJvB/tony-g/blob/main/internal/spotify/models.go
+func CleanSongTitle(songTitle string) string {
+	// Apple music main cases are (feat. ...) and [feat. ...]
+	rmParens := regexp.MustCompile(`\\*\(feat.[^)]*\)*`)
+	rmSquareBrackets := regexp.MustCompile(`\\*\[feat.[^)]*\]*`)
+	songTitle = rmParens.ReplaceAllLiteralString(songTitle, "")
+	songTitle = rmSquareBrackets.ReplaceAllLiteralString(songTitle, "")
+
+	// Youtube description titles
+	rmFtDot := regexp.MustCompile(`\\*( ft\..*)`)
+	songTitle = rmFtDot.ReplaceAllLiteralString(songTitle, "")
+	rmFeatDot := regexp.MustCompile(`\\*( feat\..*)`)
+	songTitle = rmFeatDot.ReplaceAllLiteralString(songTitle, "")
+	rmProdDot := regexp.MustCompile(`\\*( prod\..*)`)
+	songTitle = rmProdDot.ReplaceAllLiteralString(songTitle, "")
+
+	return strings.TrimSpace(songTitle)
+}
+func RmParens(songTitle string) string {
+	rmParens := regexp.MustCompile(`\\*\([^)]*\)*`)
+	rmSquareBrackets := regexp.MustCompile(`\\*\[[^)]*\]*`)
+	songTitle = rmParens.ReplaceAllLiteralString(songTitle, "")
+	songTitle = rmSquareBrackets.ReplaceAllLiteralString(songTitle, "")
+	return strings.TrimSpace(songTitle)
+}
+
+func TrySingleArtist(artistName string) string {
+	s := strings.Split(artistName, ", ")
+	return s[0]
 }

@@ -317,4 +317,77 @@ func TestYoutube(t *testing.T) {
 			panic(err)
 		}
 	})
+
+	t.Run("FindVideo works: moses!", func(t *testing.T) {
+		t.Skip("skip test calling YoutubeAPI")
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+
+		yt := NewClient(YtClientConfig{
+			ApiKey:       os.Getenv("YOUTUBE_API_KEY"),
+			ClientId:     os.Getenv("YOUTUBE_CLIENT_ID"),
+			ClientSecret: os.Getenv("YOUTUBE_CLIENT_SECRET"),
+			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
+		})
+
+		// moses is an issue
+		// can't find even with just single artist
+		// I think I should try the videoId from description but I need to be a little smart
+		results := yt.FindTrack(FindTrackInput{
+			Title:  "O Mistress Mine",
+			Artist: "Moses Sumney",
+			// Artist: "Moses Sumney, Michael Thurber, Twelfth Night Cast",
+		})
+
+		if len(results) == 0 {
+			log.Fatal("failed to find any search results for O Mistress Mine")
+		}
+
+		b, err := json.MarshalIndent(results, "", "	")
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.WriteFile("../../data/youtube-search-results.json", b, 0666)
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("Get Videos works", func(t *testing.T) {
+		t.Skip("skip test calling YoutubeAPI")
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+
+		yt := NewClient(YtClientConfig{
+			ApiKey:       os.Getenv("YOUTUBE_API_KEY"),
+			ClientId:     os.Getenv("YOUTUBE_CLIENT_ID"),
+			ClientSecret: os.Getenv("YOUTUBE_CLIENT_SECRET"),
+			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
+		})
+
+		videoIds := []string{
+			"lesdjOSFLLY",
+			// "upkEBCIZOZA", // private video is not found. That's good.
+		}
+
+		results := yt.GetVideosById(videoIds)
+
+		if len(results) == 0 {
+			log.Fatalf("Failed to find video lesdjOSFLLY")
+		}
+
+		b, err := json.MarshalIndent(results, "", "	")
+		if err != nil {
+			panic(err)
+		}
+		err = os.WriteFile("../../data/youtube-getvideo-results.json", b, 0666)
+		if err != nil {
+			panic(err)
+		}
+	})
 }
