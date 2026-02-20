@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 	"tony-g/internal/gemini"
-	"tony-g/internal/googlesearch"
 	"tony-g/internal/googlesheets"
 	"tony-g/internal/spotify"
 	"tony-g/internal/ssm"
@@ -126,15 +125,15 @@ func handleLambdaEvent(evt Evt) {
 		ClientSecret: paramClient.SpotifyClientSecret.Value,
 		RefreshToken: paramClient.SpotifyRefreshToken.Value,
 	})
-	gcs := googlesearch.NewClient(googlesearch.Secrets{
-		ApiKey: paramClient.GoogleSearchApiKey.Value,
-		Cx:     paramClient.GoogleSearchCx.Value,
-	})
+	// gcs := googlesearch.NewClient(googlesearch.Secrets{
+	// 	ApiKey: paramClient.GoogleSearchApiKey.Value,
+	// 	Cx:     paramClient.GoogleSearchCx.Value,
+	// })
 
 	toAddByYear := map[int][]string{}
 	foundMap := map[string]int{}
 	totalFound := 0
-	numSearches := 1
+	// numSearches := 1
 	for i, t := range nextTrackRows {
 		fmt.Printf("finding track %d/%d\r", i+1, len(nextTrackRows))
 
@@ -158,28 +157,35 @@ func handleLambdaEvent(evt Evt) {
 			continue
 		}
 
-		fmt.Printf("\nGoogle Search %d / 100(quotaLimit): \"%s by %s\"\n", numSearches, t.Title, t.Artist)
-		numSearches++
+		// they only went and deprecated the flippin api
+		// maybe i misunderstood so I tried to change to site-restricted api
+		// but that one is ALSO deprecated
+		// but then maybe custom search JSON API is still active?
+		// https://developers.google.com/custom-search/v1/overview
+		// idk man. I'm not happy bob.
 
-		res2 := gcs.FindSpotifyTrack(googlesearch.FindTrackInput{
-			Title:  t.Title,
-			Artist: t.Artist,
-		})
-		if len(res2) == 0 {
-			continue
-		}
+		// fmt.Printf("\nGoogle Search %d / 100(quotaLimit): \"%s by %s\"\n", numSearches, t.Title, t.Artist)
+		// numSearches++
 
-		uri, ok := spotify.LinkToTrackUri(res2[0].Link)
-		if !ok {
-			continue
-		}
+		// res2 := gcs.FindSpotifyTrack(googlesearch.FindTrackInput{
+		// 	Title:  t.Title,
+		// 	Artist: t.Artist,
+		// })
+		// if len(res2) == 0 {
+		// 	continue
+		// }
 
-		nextTrackRows[i].Source = "Google Search"
-		nextTrackRows[i].FoundTrackInfo = res2[0].Title
-		nextTrackRows[i].SpotifyUrl = res2[0].Link
-		toAddByYear[year] = append(toAddByYear[year], uri)
-		foundMap[t.VideoId]++
-		totalFound++
+		// uri, ok := spotify.LinkToTrackUri(res2[0].Link)
+		// if !ok {
+		// 	continue
+		// }
+
+		// nextTrackRows[i].Source = "Google Search"
+		// nextTrackRows[i].FoundTrackInfo = res2[0].Title
+		// nextTrackRows[i].SpotifyUrl = res2[0].Link
+		// toAddByYear[year] = append(toAddByYear[year], uri)
+		// foundMap[t.VideoId]++
+		// totalFound++
 	}
 
 	fmt.Printf("Found %d / %d tracks\n", totalFound, len(nextTrackRows))
