@@ -369,9 +369,23 @@ So I have to be prepared to delete progress and start again with updated code
 
 
 Yeah OK so how do I handle where youtube search returns a bogus result
+  - I didn't have this issue with Spotify Search, Spotify typically returned no results on a bad match.
 How do I determine if it's a bad match? Does it have a relevance score in search result?
 It doesn't look like it: https://developers.google.com/youtube/v3/docs/search#resource
 
 Another decent use case for AI: check search query and search result are close semantic match
 
 TODO: check some of the rows I marked yellow from first batch.
+
+Gemini error
+
+Error 429, Message: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit.
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+Please retry in 11.63857762s., Status: RESOURCE_EXHAUSTED, Details: [map[@type:type.googleapis.com/google.rpc.Help links:[map[description:Learn more about Gemini API quotas url:https://ai.google.dev/gemini-api/docs/rate-limits]]] map[@type:type.googleapis.com/google.rpc.QuotaFailure violations:[map[quotaDimensions:map[location:global model:gemini-2.0-flash] quotaId:GenerateRequestsPerDayPerProjectPerModel-FreeTier quotaMetric:generativelanguage.googleapis.com/generate_content_free_tier_requests] map[quotaDimensions:map[location:global model:gemini-2.0-flash] quotaId:GenerateRequestsPerMinutePerProjectPerModel-FreeTier quotaMetric:generativelanguage.googleapis.com/generate_content_free_tier_requests] map[quotaDimensions:map[location:global model:gemini-2.0-flash] quotaId:GenerateContentInputTokensPerModelPerMinute-FreeTier quotaMetric:generativelanguage.googleapis.com/generate_content_free_tier_input_token_count]]] map[@type:type.googleapis.com/google.rpc.RetryInfo retryDelay:11s]]
+FAIL	tony-g/internal/gemini	1.119s
+FAIL
+
+it might just be model version?
+Nah lmao they make you pay for it now. Let's run it for a bit with paid and see how it goes.
