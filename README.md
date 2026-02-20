@@ -2,7 +2,7 @@
 
 rebuild Tony with Go
 
-`sam build && sam deploy --profile joe`
+`sam build && sam deploy`
 
 Gonna end up deploying him to AWS as per. So I'll use this repo as ref https://github.com/JosephJvB/spotify-users-backend
 
@@ -261,3 +261,21 @@ and should definitely review those items which I was able to manually resolve th
 42 found with google search
 
 So just over 50%. It's better than nothing but not gr8 for sure
+
+
+so it was
+1. gemini is no longer free
+  add billing account to google console
+
+2. google search is deprecated
+  rm that from my project, I cry. I spent ages on that.
+
+3. sam cli is out of date so I cant build
+  upgrade sam cli w homebrew
+  it didn't work
+  Starting September 2023, AWS will no longer maintain the AWS managed Homebrew installer for the AWS SAM CLI 
+  maybe I didn't install via homebrew anyway
+  gonna try the install pkg file
+  ok now that's working
+
+Software am I right!!!
