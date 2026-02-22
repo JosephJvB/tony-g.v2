@@ -75,6 +75,7 @@ func TestGoogleSheetsModels(t *testing.T) {
 			FoundTrackInfo:         "I found adrianne little things",
 			TrackVideoId:           "123",
 			Link:                   "https://www.youtube.com/watch?v=123",
+			Confidence:             "1.2",
 			ReviewVideoId:          "456",
 			ReviewVideoPublishDate: "recently",
 			AddedAt:                "ages ago",
@@ -83,8 +84,8 @@ func TestGoogleSheetsModels(t *testing.T) {
 
 		row := FoundTrackToRow(yt)
 
-		if len(row) != 9 {
-			t.Errorf("expected row to have 9 elements. Got %d", len(row))
+		if len(row) != 10 {
+			t.Errorf("expected row to have 10 elements. Got %d", len(row))
 		}
 
 		if row[0] != "little things" {
@@ -102,31 +103,35 @@ func TestGoogleSheetsModels(t *testing.T) {
 		if row[4] != "https://www.youtube.com/watch?v=123" {
 			t.Errorf("expected row[4] to be https://www.youtube.com/watch?v=123. Got %s", row[5])
 		}
-		if row[5] != "456" {
-			t.Errorf("expected row[5] to be 456. Got %s", row[6])
+		if row[5] != "1.2" {
+			t.Errorf("Expected row[5] to be 1.2. Got %s", row[5])
 		}
-		if row[6] != "recently" {
-			t.Errorf("expected row[6] to be recently. Got %s", row[7])
+		if row[6] != "456" {
+			t.Errorf("expected row[6] to be 456. Got %s", row[6])
 		}
-		if row[7] != "ages ago" {
-			t.Errorf("expected row[7] to be ages ago. Got %s", row[8])
+		if row[7] != "recently" {
+			t.Errorf("expected row[7] to be recently. Got %s", row[7])
 		}
-		if row[8] != "2024" {
-			t.Errorf("expected row[8] to be 2024. Got %s", row[8])
+		if row[8] != "ages ago" {
+			t.Errorf("expected row[8] to be ages ago. Got %s", row[8])
+		}
+		if row[9] != "2024" {
+			t.Errorf("expected row[9] to be 2024. Got %s", row[8])
 		}
 	})
 
 	t.Run("Row to Youtube Track", func(t *testing.T) {
-		r := make([]interface{}, 9)
+		r := make([]interface{}, 10)
 		r[0] = "little things"
 		r[1] = "adrianne"
 		r[2] = "I found adrianne little things"
 		r[3] = "123"
 		r[4] = "https://www.youtube.com/watch?v=123"
-		r[5] = "456"
-		r[6] = "recently"
-		r[7] = "ages ago"
-		r[8] = "2024"
+		r[5] = "1.2"
+		r[6] = "456"
+		r[7] = "recently"
+		r[8] = "ages ago"
+		r[9] = "2024"
 
 		yt := RowToFoundTrack(r)
 
@@ -144,6 +149,9 @@ func TestGoogleSheetsModels(t *testing.T) {
 		}
 		if yt.Link != "https://www.youtube.com/watch?v=123" {
 			t.Errorf("expected link to be https://www.youtube.com/watch?v=123. Got %s", yt.Link)
+		}
+		if yt.Confidence != "1.2" {
+			t.Errorf("expected ReviewVideoId to be 1.2. Got %s", yt.Confidence)
 		}
 		if yt.ReviewVideoId != "456" {
 			t.Errorf("expected ReviewVideoId to be 456. Got %s", yt.ReviewVideoId)

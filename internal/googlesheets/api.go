@@ -25,7 +25,7 @@ var TonysVideoSheet = SheetConfig{
 var FoundTrackSheet = SheetConfig{
 	Name:        "Found Tracks",
 	Id:          724494626,
-	AllRowRange: "A2:I",
+	AllRowRange: "A2:J",
 }
 var TESTTrackSheet = SheetConfig{
 	Name:        "TEST",

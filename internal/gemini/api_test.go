@@ -216,4 +216,30 @@ func TestGemini(t *testing.T) {
 			t.Errorf("Failed to get Best tracks from description. Got %d, expected 7", len(tracks))
 		}
 	})
+	// t.Run("can generate a confidence score", func(t *testing.T) {
+	// 	// t.Skip("nah this is tonys mistake")
+
+	// 	err := godotenv.Load("../../.env")
+	// 	if err != nil {
+	// 		t.Errorf("Error loading .env file")
+	// 	}
+
+	// 	apiKey := os.Getenv("GEMINI_API_KEY")
+
+	// 	client := NewClient(apiKey)
+
+	// 	d, err := json.MarshalIndent(tracks, "", "	")
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	err = os.WriteFile("../../data/gemini-description-resp.json", d, 0666)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	if len(tracks) != 7 {
+	// 		t.Errorf("Failed to get Best tracks from description. Got %d, expected 7", len(tracks))
+	// 	}
+	// })
 }

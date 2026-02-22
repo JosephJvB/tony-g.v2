@@ -1,6 +1,7 @@
 package googlesheets
 
 import (
+	"log"
 	"strconv"
 )
 
@@ -18,6 +19,7 @@ type FoundTrackRow struct {
 	FoundTrackInfo         string
 	TrackVideoId           string
 	Link                   string
+	Confidence             string
 	ReviewVideoId          string
 	ReviewVideoPublishDate string
 	AddedAt                string
@@ -59,30 +61,33 @@ func TonyVideoToRow(video TonyVideoRow) []interface{} {
 }
 
 func RowToFoundTrack(row []interface{}) FoundTrackRow {
+	log.Printf("%v", row)
 	return FoundTrackRow{
 		Title:                  row[0].(string),
 		Artist:                 row[1].(string),
 		FoundTrackInfo:         row[2].(string),
 		TrackVideoId:           row[3].(string),
 		Link:                   row[4].(string),
-		ReviewVideoId:          row[5].(string),
-		ReviewVideoPublishDate: row[6].(string),
-		AddedAt:                row[7].(string),
-		Playlist:               row[8].(string),
+		Confidence:             row[5].(string),
+		ReviewVideoId:          row[6].(string),
+		ReviewVideoPublishDate: row[7].(string),
+		AddedAt:                row[8].(string),
+		Playlist:               row[9].(string),
 	}
 }
 
 func FoundTrackToRow(track FoundTrackRow) []interface{} {
-	r := make([]interface{}, 9)
+	r := make([]interface{}, 10)
 	r[0] = track.Title
 	r[1] = track.Artist
 	r[2] = track.FoundTrackInfo
 	r[3] = track.TrackVideoId
 	r[4] = track.Link
-	r[5] = track.ReviewVideoId
-	r[6] = track.ReviewVideoPublishDate
-	r[7] = track.AddedAt
-	r[8] = track.Playlist
+	r[5] = track.Confidence
+	r[6] = track.ReviewVideoId
+	r[7] = track.ReviewVideoPublishDate
+	r[8] = track.AddedAt
+	r[9] = track.Playlist
 
 	return r
 }
