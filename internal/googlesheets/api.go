@@ -29,8 +29,8 @@ var FoundTrackSheet = SheetConfig{
 }
 var TESTTrackSheet = SheetConfig{
 	Name:        "TEST",
-	Id:          407333682,
-	AllRowRange: "A2:I",
+	Id:          189720870,
+	AllRowRange: "A2:J",
 }
 
 type GoogleSheetsClient struct {

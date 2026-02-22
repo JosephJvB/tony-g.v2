@@ -78,20 +78,25 @@ func TestGoogleSheets(t *testing.T) {
 			PrivateKey: fixedKey,
 		})
 
-		toAdd := []FoundTrackRow{
-			{
-				Title:   "song 9",
-				Artist:  "artist 9",
-				AddedAt: "2024-04-16T00:00:00.000Z",
-			},
-			{
-				Title:   "song 2",
-				Artist:  "artist 2",
-				AddedAt: "2025-04-16T00:00:00.000Z",
-			},
+		bytes, err := os.ReadFile("../../data/scored-tracks.json")
+		if err != nil {
+			panic(err)
 		}
 
-		gs.AddFoundTracks(toAdd)
+		toAdd := []FoundTrackRow{}
+		err = json.Unmarshal(bytes, &toAdd)
+		if err != nil {
+			panic(err)
+		}
+
+		rows := make([][]interface{}, len(toAdd))
+		for _, t := range toAdd {
+			r := FoundTrackToRow(t)
+
+			rows = append(rows, r)
+		}
+
+		gs.appendRows(TESTTrackSheet, rows)
 	})
 
 	t.Run("can update 4 source and info columns", func(t *testing.T) {

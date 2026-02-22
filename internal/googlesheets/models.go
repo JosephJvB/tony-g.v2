@@ -1,7 +1,6 @@
 package googlesheets
 
 import (
-	"log"
 	"strconv"
 )
 
@@ -53,7 +52,6 @@ func TonyVideoToRow(video TonyVideoRow) []interface{} {
 }
 
 func RowToFoundTrack(row []interface{}) FoundTrackRow {
-	log.Printf("%v", row)
 	return FoundTrackRow{
 		Title:                  row[0].(string),
 		Artist:                 row[1].(string),

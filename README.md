@@ -389,3 +389,6 @@ FAIL
 
 it might just be model version?
 Nah lmao they make you pay for it now. Let's run it for a bit with paid and see how it goes.
+
+google sheets condy forming
+=AND($F1<>"",$F1<80)
