@@ -3,8 +3,11 @@ package gemini
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"os"
+	"strconv"
 	"testing"
+	"tony-g/internal/googlesheets"
 
 	"github.com/joho/godotenv"
 )
@@ -216,30 +219,66 @@ func TestGemini(t *testing.T) {
 			t.Errorf("Failed to get Best tracks from description. Got %d, expected 7", len(tracks))
 		}
 	})
-	// t.Run("can generate a confidence score", func(t *testing.T) {
-	// 	// t.Skip("nah this is tonys mistake")
+	t.Run("can generate a confidence score", func(t *testing.T) {
+		t.Skip("nah g")
 
-	// 	err := godotenv.Load("../../.env")
-	// 	if err != nil {
-	// 		t.Errorf("Error loading .env file")
-	// 	}
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			t.Errorf("Error loading .env file")
+		}
 
-	// 	apiKey := os.Getenv("GEMINI_API_KEY")
+		bytes, err := os.ReadFile("../../data/scraped-tracks.json")
+		if err != nil {
+			panic(err)
+		}
 
-	// 	client := NewClient(apiKey)
+		foundTracks := []googlesheets.FoundTrackRow{}
+		err = json.Unmarshal(bytes, &foundTracks)
+		if err != nil {
+			panic(err)
+		}
 
-	// 	d, err := json.MarshalIndent(tracks, "", "	")
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
+		for _, t := range foundTracks {
+			t.FoundTrackInfo = html.UnescapeString(t.FoundTrackInfo)
+		}
 
-	// 	err = os.WriteFile("../../data/gemini-description-resp.json", d, 0666)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
+		if len(foundTracks) == 0 {
+			t.Errorf("Failed to load tracks from data/scraped-tracks.json")
+		}
 
-	// 	if len(tracks) != 7 {
-	// 		t.Errorf("Failed to get Best tracks from description. Got %d, expected 7", len(tracks))
-	// 	}
-	// })
+		apiKey := os.Getenv("GEMINI_API_KEY")
+		client := NewClient(apiKey)
+
+		confidenceInputs := []ConfidenceScoresInput{}
+		for i, t := range foundTracks {
+			ci := ConfidenceScoresInput{
+				Index:               i,
+				Query:               t.Artist + " " + t.Title,
+				YoutubeSearchResult: t.FoundTrackInfo,
+			}
+			confidenceInputs = append(confidenceInputs, ci)
+		}
+
+		outputs := client.GenerateConfidenceScores(confidenceInputs)
+
+		fmt.Printf("generated %d confidence scores from %d inputs", len(outputs), len(confidenceInputs))
+
+		if len(outputs) != len(confidenceInputs) {
+			t.Errorf("failed to generate scores for inputs. Expected %d received %d", len(confidenceInputs), len(outputs))
+		}
+
+		for i, o := range outputs {
+			foundTracks[i].Confidence = strconv.Itoa(o.Score)
+		}
+
+		d, err := json.MarshalIndent(foundTracks, "", "	")
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.WriteFile("../../data/scored-tracks.json", d, 0666)
+		if err != nil {
+			panic(err)
+		}
+	})
 }

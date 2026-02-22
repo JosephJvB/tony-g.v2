@@ -6,13 +6,12 @@ import (
 
 func TestGoogleSheetsModels(t *testing.T) {
 	t.Run("Row to Tony Video", func(t *testing.T) {
-		r := make([]interface{}, 6)
+		r := make([]interface{}, 5)
 		r[0] = "id-123"
 		r[1] = "weekly tracko roundo"
 		r[2] = "2025-01-01"
 		r[3] = "10"
-		r[4] = "5"
-		r[5] = "ages ago"
+		r[4] = "ages ago"
 
 		v := RowToTonyVideo(r)
 
@@ -28,9 +27,6 @@ func TestGoogleSheetsModels(t *testing.T) {
 		if v.TotalTracks != 10 {
 			t.Errorf("expected totalTracks to be 10. Got %d", v.TotalTracks)
 		}
-		if v.FoundTracks != 5 {
-			t.Errorf("expected foundTracks to be 5. Got %d", v.FoundTracks)
-		}
 		if v.AddedAt != "ages ago" {
 			t.Errorf("expected addedAt to be ages ago. Got %s", v.AddedAt)
 		}
@@ -42,7 +38,6 @@ func TestGoogleSheetsModels(t *testing.T) {
 			Title:       "weekly tracko roundo",
 			PublishedAt: "2025-01-01",
 			TotalTracks: 10,
-			FoundTracks: 5,
 			AddedAt:     "ages ago",
 		}
 
@@ -60,10 +55,7 @@ func TestGoogleSheetsModels(t *testing.T) {
 		if row[3] != 10 {
 			t.Errorf("expected row[3] to be 10. Got %d", row[3])
 		}
-		if row[4] != 5 {
-			t.Errorf("expected row[4] to be 5. Got %d", row[4])
-		}
-		if row[5] != "ages ago" {
+		if row[4] != "ages ago" {
 			t.Errorf("expected row[5] to be ages ago. Got %s", row[5])
 		}
 	})

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"math"
 	"slices"
 	"strconv"
@@ -103,7 +104,6 @@ func handleLambdaEvent(evt Evt) {
 			Title:       v.Snippet.Title,
 			PublishedAt: v.Snippet.PublishedAt,
 			TotalTracks: len(nextTracks),
-			FoundTracks: 0,
 			AddedAt:     timestamp,
 		}
 		nextVideoRows = append(nextVideoRows, nv)
@@ -135,11 +135,6 @@ func handleLambdaEvent(evt Evt) {
 		return
 	}
 
-	// year -> youtube video id
-	// used for final youtube.AddPlaylistItems
-	toAddByYear := map[string][]string{}
-	// just for counting
-	foundMap := map[string]int{}
 	totalFound := 0
 	for i, t := range nextTrackRows {
 		fmt.Printf("finding track %d/%d\r", i+1, len(nextTrackRows))
@@ -157,8 +152,6 @@ func handleLambdaEvent(evt Evt) {
 			if len(res) > 0 {
 				nextTrackRows[i].TrackVideoId = idFromLink
 				nextTrackRows[i].FoundTrackInfo = res[0].Snippet.Title
-				toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], idFromLink)
-				foundMap[t.ReviewVideoId]++
 				totalFound++
 				continue
 			}
@@ -169,16 +162,40 @@ func handleLambdaEvent(evt Evt) {
 			Title:  t.Title,
 		})
 
+		// tbh it seems youtube always returns a video
 		if len(res) > 0 {
 			nextTrackRows[i].TrackVideoId = res[0].Id.VideoId
-			nextTrackRows[i].FoundTrackInfo = res[0].Snippet.Title
-			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], res[0].Id.VideoId)
-			foundMap[t.ReviewVideoId]++
+			nextTrackRows[i].FoundTrackInfo = html.UnescapeString(res[0].Snippet.Title)
 			totalFound++
 		}
 	}
 
 	fmt.Printf("Found %d / %d tracks\n", totalFound, len(nextTrackRows))
+
+	fmt.Println("Generating confidence scores")
+	cis := []gemini.ConfidenceScoresInput{}
+	for _, t := range nextTrackRows {
+		ci := gemini.ConfidenceScoresInput{
+			Query:               t.Artist + " " + t.Title,
+			YoutubeSearchResult: t.FoundTrackInfo,
+		}
+		cis = append(cis, ci)
+	}
+	outputs := gem.GenerateConfidenceScores(cis)
+
+	fmt.Printf("Generated %d confidence scores", len(outputs))
+	// year -> youtube video id
+	// used for final youtube.AddPlaylistItems
+	toAddByYear := map[string][]string{}
+	for i, o := range outputs {
+		nextTrackRows[i].Confidence = strconv.Itoa(o.Score)
+
+		// only add songs with decent confidence
+		if o.Score >= 50 {
+			t := nextTrackRows[i]
+			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], t.TrackVideoId)
+		}
+	}
 
 	myPlaylists := yt.LoadAllPlaylists()
 	fmt.Printf("Loaded %d playlists\n", len(myPlaylists))
@@ -229,9 +246,6 @@ func handleLambdaEvent(evt Evt) {
 	fmt.Printf("Adding %d track rows to google sheets\n", len(nextTrackRows))
 	gs.AddFoundTracks(nextTrackRows)
 
-	for i, v := range nextVideoRows {
-		nextVideoRows[i].FoundTracks = foundMap[v.Id]
-	}
 	fmt.Printf("Adding %d video rows to google sheets\n", len(nextVideoRows))
 	gs.AddTonysVideos(nextVideoRows)
 }

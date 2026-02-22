@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -17,6 +18,15 @@ type ParsedTrack struct {
 	Url    string `json:"url"`
 }
 
+type ConfidenceScoresInput struct {
+	Index               int    `json:"index"`
+	Query               string `json:"query"`
+	YoutubeSearchResult string `json:"YoutubeSearchResult"`
+}
+type ConfidenceScoresOutput struct {
+	Index int `json:"index"`
+	Score int `json:"score"`
+}
 type GeminiClient struct {
 	client genai.Client
 	ctx    context.Context
@@ -36,6 +46,81 @@ func NewClient(apiKey string) GeminiClient {
 		client: *client,
 		ctx:    ctx,
 	}
+}
+
+func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScoresInput) []ConfidenceScoresOutput {
+	input := "the following list is songs that I have searched for via Youtube Search API"
+	input += "\nfor each item, generate a confidence score that the query has returned the correct youtube video"
+	input += "\nscore should be between 0 and 100"
+	input += "\nthe list of scores must be in the same order as the inputs so I can correctly assign scores"
+	input += "\n"
+	input += "\nlist:\n"
+
+	jsonList, err := json.Marshal(inputs)
+	if err != nil {
+		panic(err)
+	}
+
+	input += string(jsonList)
+
+	err = os.WriteFile("../../data/confidence-input.txt", []byte(input), 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	result, err := c.client.Models.GenerateContent(
+		c.ctx,
+		"gemini-2.0-flash",
+		genai.Text(input),
+		&genai.GenerateContentConfig{
+			ResponseMIMEType: "application/json",
+			ResponseSchema: &genai.Schema{
+				Type: genai.TypeArray,
+				Items: &genai.Schema{
+					Type: genai.TypeObject,
+					Properties: map[string]*genai.Schema{
+						"index": {Type: genai.TypeNumber},
+						"score": {Type: genai.TypeNumber},
+					},
+				},
+			},
+		},
+	)
+
+	if err != nil {
+		errStr := err.Error()
+		// I think this was wifi cutting out. Rm for now
+		// if strings.HasPrefix(errStr, "Error 503, Message: The service is currently unavailable") {
+		// 	fmt.Println("Gemini 503 error, 10 sec timeout")
+		// 	time.Sleep(time.Second * 10)
+		// 	return c.GenerateConfidenceScores(inputs)
+		// }
+		if strings.HasPrefix(errStr, "Error 429, Message: You exceeded your current quota") {
+			fmt.Println("Gemini Quota Exceeded, 10 sec timeout")
+			time.Sleep(time.Second * 10)
+			return c.GenerateConfidenceScores(inputs)
+		}
+
+		log.Fatal(err)
+	}
+
+	outputs := []ConfidenceScoresOutput{}
+	err = json.Unmarshal([]byte(result.Text()), &outputs)
+	if err != nil {
+		log.Fatalf("GenerateConfidenceScores: Failed to parse response JSON")
+	}
+
+	// d, err := json.MarshalIndent(scores, "", "	")
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// err = os.WriteFile("../../data/scorrreee.json", d, 0666)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	return outputs
 }
 
 func (c *GeminiClient) ParseYoutubeDescription(description string) []ParsedTrack {
@@ -61,7 +146,6 @@ func (c *GeminiClient) ParseYoutubeDescription(description string) []ParsedTrack
 			ResponseSchema: &genai.Schema{
 				Type: genai.TypeArray,
 				Items: &genai.Schema{
-
 					Type: genai.TypeObject,
 					Properties: map[string]*genai.Schema{
 						"title":  {Type: genai.TypeString},

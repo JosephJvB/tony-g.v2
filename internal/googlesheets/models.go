@@ -10,7 +10,6 @@ type TonyVideoRow struct {
 	Title       string
 	PublishedAt string
 	TotalTracks int
-	FoundTracks int
 	AddedAt     string
 }
 type FoundTrackRow struct {
@@ -32,30 +31,23 @@ func RowToTonyVideo(row []interface{}) TonyVideoRow {
 	if err != nil {
 		tt = -1
 	}
-	ftStr := row[4].(string)
-	ft, err := strconv.Atoi(ftStr)
-	if err != nil {
-		ft = -1
-	}
 
 	return TonyVideoRow{
 		Id:          row[0].(string),
 		Title:       row[1].(string),
 		PublishedAt: row[2].(string),
 		TotalTracks: tt,
-		FoundTracks: ft,
-		AddedAt:     row[5].(string),
+		AddedAt:     row[4].(string),
 	}
 }
 
 func TonyVideoToRow(video TonyVideoRow) []interface{} {
-	r := make([]interface{}, 6)
+	r := make([]interface{}, 5)
 	r[0] = video.Id
 	r[1] = video.Title
 	r[2] = video.PublishedAt
 	r[3] = video.TotalTracks
-	r[4] = video.FoundTracks
-	r[5] = video.AddedAt
+	r[4] = video.AddedAt
 
 	return r
 }

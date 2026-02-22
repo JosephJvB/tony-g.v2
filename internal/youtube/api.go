@@ -345,7 +345,7 @@ func (yt *YoutubeClient) findTrack(t FindTrackInput) []SearchResult {
 	// see "Blinding Lights by the Weeknd"
 	// this works for songs by large artists who follow some conventions like (offical audio)
 	// fails for smaller artists who don't have big public channels and don't follow those naming conventions..
-	queryPart.Set("q", t.Artist+" "+t.Title+" (official audio)")
+	queryPart.Set("q", t.Artist+" "+t.Title)
 	// tried this, api ref. says you can negate q params, I don't want music video
 	// but not working for me
 	// queryPart.Set("q", t.Artist+" "+t.Title+" audio -video")
