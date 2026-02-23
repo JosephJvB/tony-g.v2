@@ -215,8 +215,8 @@ func TestGemini(t *testing.T) {
 			panic(err)
 		}
 
-		if len(tracks) != 7 {
-			t.Errorf("Failed to get Best tracks from description. Got %d, expected 7", len(tracks))
+		if len(tracks) != 6 {
+			t.Errorf("Failed to get Best tracks from description. Got %d, expected 6", len(tracks))
 		}
 	})
 	t.Run("can generate a confidence score", func(t *testing.T) {

@@ -2,11 +2,13 @@ package youtube
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 const BaseUrl = "https://www.googleapis.com/youtube/v3"
@@ -282,10 +284,12 @@ func (yt *YoutubeClient) AddPlaylistItems(playlistId string, videoIds []string) 
 		yt.setAccessToken()
 	}
 
-	for _, videoId := range videoIds {
+	for i, videoId := range videoIds {
+		fmt.Printf("adding track %d/%d to playlist\r", i+1, len(videoIds))
 		// always add items at the start of a playlist
 		// ie: newest added songs are at the start
 		addPlaylistItem(yt.accessToken, playlistId, videoId, 0)
+		time.Sleep(time.Second * 1)
 	}
 }
 
@@ -343,8 +347,10 @@ func (yt *YoutubeClient) findTrack(t FindTrackInput) []SearchResult {
 	queryPart.Set("maxResults", "1")
 	// videos often have extra audio stuff you don't want
 	// see "Blinding Lights by the Weeknd"
+	// queryPart.Set("q", t.Artist+" "+t.Title + " (official audio)")
 	// this works for songs by large artists who follow some conventions like (offical audio)
 	// fails for smaller artists who don't have big public channels and don't follow those naming conventions..
+	// so prefer simple
 	queryPart.Set("q", t.Artist+" "+t.Title)
 	// tried this, api ref. says you can negate q params, I don't want music video
 	// but not working for me

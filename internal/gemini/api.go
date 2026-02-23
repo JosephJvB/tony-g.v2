@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -31,6 +30,8 @@ type GeminiClient struct {
 	client genai.Client
 	ctx    context.Context
 }
+
+const GEMINI_MODEL = "gemini-2.5-flash"
 
 func NewClient(apiKey string) GeminiClient {
 	ctx := context.Background()
@@ -63,14 +64,14 @@ func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScoresInput) 
 
 	input += string(jsonList)
 
-	err = os.WriteFile("../../data/confidence-input.txt", []byte(input), 0666)
-	if err != nil {
-		panic(err)
-	}
+	// err = os.WriteFile("../../data/confidence-input.txt", []byte(input), 0666)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	result, err := c.client.Models.GenerateContent(
 		c.ctx,
-		"gemini-2.0-flash",
+		GEMINI_MODEL,
 		genai.Text(input),
 		&genai.GenerateContentConfig{
 			ResponseMIMEType: "application/json",
@@ -135,7 +136,7 @@ func (c *GeminiClient) ParseYoutubeDescription(description string) []ParsedTrack
 
 	result, err := c.client.Models.GenerateContent(
 		c.ctx,
-		"gemini-2.0-flash",
+		GEMINI_MODEL,
 		genai.Text(input),
 		&genai.GenerateContentConfig{
 			// Tools: []*genai.Tool{

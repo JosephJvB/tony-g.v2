@@ -20,6 +20,8 @@ type Evt struct {
 	VideoIds []string `json:"videoIds"`
 }
 
+const MAX_VIDEOS_PER_RUN = 3
+
 func handleLambdaEvent(evt Evt) {
 	now := time.Now()
 	timestamp := now.Format(time.RFC3339)
@@ -93,7 +95,7 @@ func handleLambdaEvent(evt Evt) {
 	nextVideoRows := []googlesheets.TonyVideoRow{}
 	// set max amount of videos to process in one go
 	// in case there are a lot - we dont wanna try do too many and fail due to google api quota
-	upper := int(math.Min(float64(len(nextVideos)), 5))
+	upper := int(math.Min(float64(len(nextVideos)), MAX_VIDEOS_PER_RUN))
 	nextVideos = nextVideos[0:upper]
 	for i, v := range nextVideos {
 		fmt.Printf("Getting tracks from description %d/%d\r", i+1, len(nextVideos))
@@ -130,7 +132,7 @@ func handleLambdaEvent(evt Evt) {
 			nextTrackRows = append(nextTrackRows, r)
 		}
 	}
-	fmt.Printf("Gemini found %d tracks in %d video descriptions\n", len(nextTrackRows), len(nextVideos))
+	fmt.Printf("\nGemini found %d tracks in %d video descriptions\n", len(nextTrackRows), len(nextVideos))
 	if len(nextTrackRows) == 0 {
 		return
 	}
@@ -170,7 +172,7 @@ func handleLambdaEvent(evt Evt) {
 		}
 	}
 
-	fmt.Printf("Found %d / %d tracks\n", totalFound, len(nextTrackRows))
+	fmt.Printf("\nFound %d / %d tracks\n", totalFound, len(nextTrackRows))
 
 	fmt.Println("Generating confidence scores")
 	cis := []gemini.ConfidenceScoresInput{}
@@ -183,7 +185,7 @@ func handleLambdaEvent(evt Evt) {
 	}
 	outputs := gem.GenerateConfidenceScores(cis)
 
-	fmt.Printf("Generated %d confidence scores", len(outputs))
+	fmt.Printf("Generated %d confidence scores\n", len(outputs))
 	// year -> youtube video id
 	// used for final youtube.AddPlaylistItems
 	toAddByYear := map[string][]string{}
