@@ -2,10 +2,10 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "tony-g"
+stack_name = "tony-g-yt"
 s3_bucket = "jvb-code-lndn"
-s3_prefix = "SAM/tony-g"
-region = "eu-west-2"
+s3_prefix = "SAM/tony-g-yt"
+region = "us-west-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 # parameter_overrides = ""

@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: 'Steal intellectual property from Tony Fantano'
+Description: 'Steal (publicly available) intellectual property from Mr Tony Fantano'
 
 Parameters:
   Debug:
@@ -46,7 +46,11 @@ Resources:
             # Tony releases weekly track roundups on Monday I think.
             # https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-scheduled-rule-pattern.html
             # minutes, hours, day-of-month, month, day-of-week, year
-            ScheduleExpression: cron(0 7 ? * TUE *)
+            # ScheduleExpression: cron(0 7 ? * TUE *)
+            # NZDT version
+            # ScheduleExpression: cron(0 18 ? * MON *)
+            # run daily at UTC 6pm ~= NZDT 7am
+            ScheduleExpression: cron(0 18 * * ? *)
 
 Outputs:
   YoutubeLambdaFn:
