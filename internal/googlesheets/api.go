@@ -20,7 +20,7 @@ type SheetConfig struct {
 var TonysVideoSheet = SheetConfig{
 	Name:        "Tony's Videos",
 	Id:          571234434,
-	AllRowRange: "A2:F",
+	AllRowRange: "A2:E",
 }
 var FoundTrackSheet = SheetConfig{
 	Name:        "Found Tracks",
