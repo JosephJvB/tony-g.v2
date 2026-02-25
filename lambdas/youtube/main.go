@@ -17,10 +17,10 @@ import (
 )
 
 type Evt struct {
-	VideoIds []string `json:"videoIds"`
+	MaxVideosPerRun int `json:"maxVideosPerRun"`
 }
 
-const MAX_VIDEOS_PER_RUN = 3
+const MAX_VIDEOS_PER_RUN = 5
 
 func handleLambdaEvent(evt Evt) {
 	now := time.Now()
@@ -93,9 +93,16 @@ func handleLambdaEvent(evt Evt) {
 
 	nextTrackRows := []googlesheets.FoundTrackRow{}
 	nextVideoRows := []googlesheets.TonyVideoRow{}
+	
 	// set max amount of videos to process in one go
 	// in case there are a lot - we dont wanna try do too many and fail due to google api quota
-	upper := int(math.Min(float64(len(nextVideos)), MAX_VIDEOS_PER_RUN))
+	// hard cap set by MAX_VIDEOS_PER_RUN, but can be further limited by evt.MaxVideosPerRun
+	limits := []int{MAX_VIDEOS_PER_RUN, len(nextVideos)}
+	if evt.MaxVideosPerRun > 0 {
+		limits = append(limits, evt.MaxVideosPerRun)
+	}
+	upper := min(limits...)
+
 	nextVideos = nextVideos[0:upper]
 	for i, v := range nextVideos {
 		fmt.Printf("Getting tracks from description %d/%d\r", i+1, len(nextVideos))
