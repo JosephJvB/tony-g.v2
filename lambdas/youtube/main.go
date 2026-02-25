@@ -20,7 +20,7 @@ type Evt struct {
 	MaxVideosPerRun int `json:"maxVideosPerRun"`
 }
 
-const MAX_VIDEOS_PER_RUN = 5
+const MAX_VIDEOS_PER_RUN = 3
 
 func handleLambdaEvent(evt Evt) {
 	now := time.Now()
