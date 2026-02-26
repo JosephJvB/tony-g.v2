@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"html"
-	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -17,7 +16,8 @@ import (
 )
 
 type Evt struct {
-	MaxVideosPerRun int `json:"maxVideosPerRun"`
+	MaxVideosPerRun int      `json:"maxVideosPerRun"`
+	VideoIds        []string `json:"videoIds"`
 }
 
 const MAX_VIDEOS_PER_RUN = 3
@@ -93,15 +93,14 @@ func handleLambdaEvent(evt Evt) {
 
 	nextTrackRows := []googlesheets.FoundTrackRow{}
 	nextVideoRows := []googlesheets.TonyVideoRow{}
-	
+
 	// set max amount of videos to process in one go
 	// in case there are a lot - we dont wanna try do too many and fail due to google api quota
 	// hard cap set by MAX_VIDEOS_PER_RUN, but can be further limited by evt.MaxVideosPerRun
-	limits := []int{MAX_VIDEOS_PER_RUN, len(nextVideos)}
+	upper := min(MAX_VIDEOS_PER_RUN, len(nextVideos))
 	if evt.MaxVideosPerRun > 0 {
-		limits = append(limits, evt.MaxVideosPerRun)
+		upper = min(upper, evt.MaxVideosPerRun)
 	}
-	upper := min(limits...)
 
 	nextVideos = nextVideos[0:upper]
 	for i, v := range nextVideos {
