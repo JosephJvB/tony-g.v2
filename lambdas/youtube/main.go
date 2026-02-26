@@ -159,7 +159,8 @@ func handleLambdaEvent(evt Evt) {
 			})
 			if len(res) > 0 {
 				nextTrackRows[i].TrackVideoId = idFromLink
-				nextTrackRows[i].FoundTrackInfo = res[0].Snippet.Title
+				nextTrackRows[i].FoundTrackInfo = html.UnescapeString(
+					res[0].Snippet.Title + " " + res[0].Snippet.ChannelTitle)
 				totalFound++
 				continue
 			}
@@ -173,7 +174,8 @@ func handleLambdaEvent(evt Evt) {
 		// tbh it seems youtube always returns a video
 		if len(res) > 0 {
 			nextTrackRows[i].TrackVideoId = res[0].Id.VideoId
-			nextTrackRows[i].FoundTrackInfo = html.UnescapeString(res[0].Snippet.Title)
+			nextTrackRows[i].FoundTrackInfo = html.UnescapeString(
+				res[0].Snippet.Title + " " + res[0].Snippet.ChannelTitle)
 			totalFound++
 		}
 	}
