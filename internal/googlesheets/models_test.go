@@ -43,6 +43,10 @@ func TestGoogleSheetsModels(t *testing.T) {
 
 		row := TonyVideoToRow(v)
 
+		if len(row) != 5 {
+			t.Errorf("expected row to have 5 elements. Got %d", len(row))
+		}
+
 		if row[0] != "id-123" {
 			t.Errorf("expected row[0] to be id-123. Got %s", row[0])
 		}
@@ -64,8 +68,9 @@ func TestGoogleSheetsModels(t *testing.T) {
 		yt := FoundTrackRow{
 			Title:                  "little things",
 			Artist:                 "adrianne",
-			FoundTrackInfo:         "I found adrianne little things",
-			TrackVideoId:           "123",
+			FoundVideoTitle:        "adrianne little things",
+			FoundChannelTitle:      "adriannes channel",
+			FoundVideoId:           "123",
 			Link:                   "https://www.youtube.com/watch?v=123",
 			Confidence:             "1.2",
 			ReviewVideoId:          "456",
@@ -76,8 +81,8 @@ func TestGoogleSheetsModels(t *testing.T) {
 
 		row := FoundTrackToRow(yt)
 
-		if len(row) != 10 {
-			t.Errorf("expected row to have 10 elements. Got %d", len(row))
+		if len(row) != 11 {
+			t.Errorf("expected row to have 11 elements. Got %d", len(row))
 		}
 
 		if row[0] != "little things" {
@@ -86,44 +91,48 @@ func TestGoogleSheetsModels(t *testing.T) {
 		if row[1] != "adrianne" {
 			t.Errorf("expected row[1] to be adrianne. Got %s", row[1])
 		}
-		if row[2] != "I found adrianne little things" {
-			t.Errorf("expected row[2] to be I found adrianne little things, Got %s", row[3])
+		if row[2] != "adrianne little things" {
+			t.Errorf("expected row[2] to be adrianne little things, Got %s", row[2])
 		}
-		if row[3] != "123" {
-			t.Errorf("expected row[3] to be 123. Got %s", row[4])
+		if row[3] != "adriannes channel" {
+			t.Errorf("expected row[3] to be adriannes channel. Got %s", row[3])
 		}
-		if row[4] != "https://www.youtube.com/watch?v=123" {
-			t.Errorf("expected row[4] to be https://www.youtube.com/watch?v=123. Got %s", row[5])
+		if row[4] != "123" {
+			t.Errorf("expected row[4] to be 123. Got %s", row[4])
 		}
-		if row[5] != "1.2" {
-			t.Errorf("Expected row[5] to be 1.2. Got %s", row[5])
+		if row[5] != "https://www.youtube.com/watch?v=123" {
+			t.Errorf("expected row[5] to be https://www.youtube.com/watch?v=123. Got %s", row[5])
 		}
-		if row[6] != "456" {
-			t.Errorf("expected row[6] to be 456. Got %s", row[6])
+		if row[6] != "1.2" {
+			t.Errorf("Expected row[6] to be 1.2. Got %s", row[6])
 		}
-		if row[7] != "recently" {
-			t.Errorf("expected row[7] to be recently. Got %s", row[7])
+		if row[7] != "456" {
+			t.Errorf("expected row[7] to be 456. Got %s", row[7])
 		}
-		if row[8] != "ages ago" {
-			t.Errorf("expected row[8] to be ages ago. Got %s", row[8])
+		if row[8] != "recently" {
+			t.Errorf("expected row[8] to be recently. Got %s", row[8])
 		}
-		if row[9] != "2024" {
-			t.Errorf("expected row[9] to be 2024. Got %s", row[8])
+		if row[9] != "ages ago" {
+			t.Errorf("expected row[9] to be ages ago. Got %s", row[9])
+		}
+		if row[10] != "2024" {
+			t.Errorf("expected row[10] to be 2024. Got %s", row[10])
 		}
 	})
 
 	t.Run("Row to Youtube Track", func(t *testing.T) {
-		r := make([]interface{}, 10)
+		r := make([]interface{}, 11)
 		r[0] = "little things"
 		r[1] = "adrianne"
-		r[2] = "I found adrianne little things"
-		r[3] = "123"
-		r[4] = "https://www.youtube.com/watch?v=123"
-		r[5] = "1.2"
-		r[6] = "456"
-		r[7] = "recently"
-		r[8] = "ages ago"
-		r[9] = "2024"
+		r[2] = "adrianne little things"
+		r[3] = "adriannes channel"
+		r[4] = "123"
+		r[5] = "https://www.youtube.com/watch?v=123"
+		r[6] = "1.2"
+		r[7] = "456"
+		r[8] = "recently"
+		r[9] = "ages ago"
+		r[10] = "2024"
 
 		yt := RowToFoundTrack(r)
 
@@ -133,11 +142,14 @@ func TestGoogleSheetsModels(t *testing.T) {
 		if yt.Artist != "adrianne" {
 			t.Errorf("expected artist to be adrianne. Got %s", yt.Artist)
 		}
-		if yt.FoundTrackInfo != "I found adrianne little things" {
-			t.Errorf("expected foundTrackInfo to be I found adrianne little things. Got %s", yt.FoundTrackInfo)
+		if yt.FoundVideoTitle != "adrianne little things" {
+			t.Errorf("expected foundVideoTitle to be adrianne little things. Got %s", yt.FoundVideoTitle)
 		}
-		if yt.TrackVideoId != "123" {
-			t.Errorf("expected TrackVideoId to be 123. Got %s", yt.TrackVideoId)
+		if yt.FoundChannelTitle != "adriannes channel" {
+			t.Errorf("expected foundChannelTitle to be adriannes channel. Got %s", yt.FoundChannelTitle)
+		}
+		if yt.FoundVideoId != "123" {
+			t.Errorf("expected TrackVideoId to be 123. Got %s", yt.FoundVideoId)
 		}
 		if yt.Link != "https://www.youtube.com/watch?v=123" {
 			t.Errorf("expected link to be https://www.youtube.com/watch?v=123. Got %s", yt.Link)

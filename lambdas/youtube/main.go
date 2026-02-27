@@ -126,8 +126,9 @@ func handleLambdaEvent(evt Evt) {
 			r := googlesheets.FoundTrackRow{
 				Title:                  t.Title,
 				Artist:                 t.Artist,
-				FoundTrackInfo:         "",
-				TrackVideoId:           "",
+				FoundVideoTitle:        "",
+				FoundChannelTitle:      "",
+				FoundVideoId:           "",
 				Link:                   t.Url,
 				ReviewVideoId:          v.Snippet.ResourceId.VideoId,
 				ReviewVideoPublishDate: v.Snippet.PublishedAt,
@@ -158,9 +159,9 @@ func handleLambdaEvent(evt Evt) {
 				idFromLink,
 			})
 			if len(res) > 0 {
-				nextTrackRows[i].TrackVideoId = idFromLink
-				nextTrackRows[i].FoundTrackInfo = html.UnescapeString(
-					res[0].Snippet.Title + " " + res[0].Snippet.ChannelTitle)
+				nextTrackRows[i].FoundVideoId = idFromLink
+				nextTrackRows[i].FoundVideoTitle = html.UnescapeString(res[0].Snippet.Title)
+				nextTrackRows[i].FoundChannelTitle = html.UnescapeString(res[0].Snippet.ChannelTitle)
 				totalFound++
 				continue
 			}
@@ -173,9 +174,9 @@ func handleLambdaEvent(evt Evt) {
 
 		// tbh it seems youtube always returns a video
 		if len(res) > 0 {
-			nextTrackRows[i].TrackVideoId = res[0].Id.VideoId
-			nextTrackRows[i].FoundTrackInfo = html.UnescapeString(
-				res[0].Snippet.Title + " " + res[0].Snippet.ChannelTitle)
+			nextTrackRows[i].FoundVideoId = res[0].Id.VideoId
+			nextTrackRows[i].FoundVideoTitle = html.UnescapeString(res[0].Snippet.Title)
+			nextTrackRows[i].FoundChannelTitle = html.UnescapeString(res[0].Snippet.ChannelTitle)
 			totalFound++
 		}
 	}
@@ -183,11 +184,13 @@ func handleLambdaEvent(evt Evt) {
 	fmt.Printf("\nFound %d / %d tracks\n", totalFound, len(nextTrackRows))
 
 	fmt.Println("Generating confidence scores")
-	cis := []gemini.ConfidenceScoresInput{}
-	for _, t := range nextTrackRows {
-		ci := gemini.ConfidenceScoresInput{
+	cis := []gemini.ConfidenceScore{}
+	for i, t := range nextTrackRows {
+		ci := gemini.ConfidenceScore{
+			Index:               i,
 			Query:               t.Artist + " " + t.Title,
-			YoutubeSearchResult: t.FoundTrackInfo,
+			YoutubeVideoTitle:   t.FoundVideoTitle,
+			YoutubeChannelTitle: t.FoundChannelTitle,
 		}
 		cis = append(cis, ci)
 	}
@@ -203,7 +206,7 @@ func handleLambdaEvent(evt Evt) {
 		// only add songs with decent confidence
 		if o.Score >= 50 {
 			t := nextTrackRows[i]
-			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], t.TrackVideoId)
+			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], t.FoundVideoId)
 		}
 	}
 

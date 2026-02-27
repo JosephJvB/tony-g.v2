@@ -17,14 +17,12 @@ type ParsedTrack struct {
 	Url    string `json:"url"`
 }
 
-type ConfidenceScoresInput struct {
+type ConfidenceScore struct {
 	Index               int    `json:"index"`
 	Query               string `json:"query"`
-	YoutubeSearchResult string `json:"YoutubeSearchResult"`
-}
-type ConfidenceScoresOutput struct {
-	Index int `json:"index"`
-	Score int `json:"score"`
+	YoutubeVideoTitle   string `json:"youtubeVideoTitle"`
+	YoutubeChannelTitle string `json:"youtubeChannelTitle"`
+	Score               int    `json:"score"`
 }
 type GeminiClient struct {
 	client genai.Client
@@ -49,19 +47,27 @@ func NewClient(apiKey string) GeminiClient {
 	}
 }
 
-func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScoresInput) []ConfidenceScoresOutput {
-	input := "the following list is songs that I have searched for via Youtube Search API"
-	input += "\nfor each item, generate a confidence score that the query has returned the correct youtube video"
-	input += "\nscore should be between 0 and 100"
-	input += "\nthe list of scores must be in the same order as the inputs so I can correctly assign scores"
-	input += "\n"
-	input += "\nlist:\n"
+func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScore) []ConfidenceScore {
+	input := `Given a list of items where each has a "query" (artist + song title) and a
+"youtubeSearchResult" (the title of the top YouTube search result), score
+how confident you are (0-100) that the YouTube result is the correct
+official music track.
+
+Scoring guidelines:
+- 90-100: Result clearly matches the artist and song title (official audio/video)
+- 50-89: Result likely matches but has extra info (feat. artists, remix labels, etc.)
+- 20-49: Result is ambiguous — could be a cover, live version, or compilation
+- 0-19: Result is clearly wrong (different song, reaction video, unrelated content)
+
+Return a JSON array with the same length as the input
+where each item is your confidence score relating to the corresponding input item.`
 
 	jsonList, err := json.Marshal(inputs)
 	if err != nil {
 		panic(err)
 	}
 
+	input += "\n\nInput:\n"
 	input += string(jsonList)
 
 	// err = os.WriteFile("../../data/confidence-input.txt", []byte(input), 0666)
@@ -78,11 +84,7 @@ func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScoresInput) 
 			ResponseSchema: &genai.Schema{
 				Type: genai.TypeArray,
 				Items: &genai.Schema{
-					Type: genai.TypeObject,
-					Properties: map[string]*genai.Schema{
-						"index": {Type: genai.TypeNumber},
-						"score": {Type: genai.TypeNumber},
-					},
+					Type: genai.TypeInteger,
 				},
 			},
 		},
@@ -105,10 +107,18 @@ func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScoresInput) 
 		log.Fatal(err)
 	}
 
-	outputs := []ConfidenceScoresOutput{}
+	outputs := []int{}
 	err = json.Unmarshal([]byte(result.Text()), &outputs)
 	if err != nil {
 		log.Fatalf("GenerateConfidenceScores: Failed to parse response JSON")
+	}
+
+	if len(outputs) != len(inputs) {
+		log.Fatalf("GenerateConfidenceScores: expected %d scores, got %d", len(inputs), len(outputs))
+	}
+
+	for i, score := range outputs {
+		inputs[i].Score = score
 	}
 
 	// d, err := json.MarshalIndent(scores, "", "	")
@@ -121,7 +131,7 @@ func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScoresInput) 
 	// 	panic(err)
 	// }
 
-	return outputs
+	return inputs
 }
 
 func (c *GeminiClient) ParseYoutubeDescription(description string) []ParsedTrack {

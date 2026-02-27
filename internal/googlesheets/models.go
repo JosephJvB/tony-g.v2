@@ -14,8 +14,9 @@ type TonyVideoRow struct {
 type FoundTrackRow struct {
 	Title                  string
 	Artist                 string
-	FoundTrackInfo         string
-	TrackVideoId           string
+	FoundVideoTitle        string
+	FoundChannelTitle      string
+	FoundVideoId           string
 	Link                   string
 	Confidence             string
 	ReviewVideoId          string
@@ -55,29 +56,31 @@ func RowToFoundTrack(row []interface{}) FoundTrackRow {
 	return FoundTrackRow{
 		Title:                  row[0].(string),
 		Artist:                 row[1].(string),
-		FoundTrackInfo:         row[2].(string),
-		TrackVideoId:           row[3].(string),
-		Link:                   row[4].(string),
-		Confidence:             row[5].(string),
-		ReviewVideoId:          row[6].(string),
-		ReviewVideoPublishDate: row[7].(string),
-		AddedAt:                row[8].(string),
-		Playlist:               row[9].(string),
+		FoundVideoTitle:        row[2].(string),
+		FoundChannelTitle:      row[3].(string),
+		FoundVideoId:           row[4].(string),
+		Link:                   row[5].(string),
+		Confidence:             row[6].(string),
+		ReviewVideoId:          row[7].(string),
+		ReviewVideoPublishDate: row[8].(string),
+		AddedAt:                row[9].(string),
+		Playlist:               row[10].(string),
 	}
 }
 
 func FoundTrackToRow(track FoundTrackRow) []interface{} {
-	r := make([]interface{}, 10)
+	r := make([]interface{}, 11)
 	r[0] = track.Title
 	r[1] = track.Artist
-	r[2] = track.FoundTrackInfo
-	r[3] = track.TrackVideoId
-	r[4] = track.Link
-	r[5] = track.Confidence
-	r[6] = track.ReviewVideoId
-	r[7] = track.ReviewVideoPublishDate
-	r[8] = track.AddedAt
-	r[9] = track.Playlist
+	r[2] = track.FoundVideoTitle
+	r[3] = track.FoundChannelTitle
+	r[4] = track.FoundVideoId
+	r[5] = track.Link
+	r[6] = track.Confidence
+	r[7] = track.ReviewVideoId
+	r[8] = track.ReviewVideoPublishDate
+	r[9] = track.AddedAt
+	r[10] = track.Playlist
 
 	return r
 }
