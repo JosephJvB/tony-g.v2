@@ -14,7 +14,8 @@ type TonyVideoRow struct {
 type FoundTrackRow struct {
 	Title                  string
 	Artist                 string
-	FoundTrackInfo         string
+	FoundVideoTitle        string
+	FoundChannelTitle      string
 	TrackVideoId           string
 	Link                   string
 	Confidence             string

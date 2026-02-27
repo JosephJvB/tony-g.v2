@@ -219,6 +219,7 @@ func TestGemini(t *testing.T) {
 			t.Errorf("Failed to get Best tracks from description. Got %d, expected 6", len(tracks))
 		}
 	})
+
 	t.Run("can generate a confidence score", func(t *testing.T) {
 		t.Skip("nah g")
 
@@ -249,9 +250,9 @@ func TestGemini(t *testing.T) {
 		apiKey := os.Getenv("GEMINI_API_KEY")
 		client := NewClient(apiKey)
 
-		confidenceInputs := []ConfidenceScoresInput{}
+		confidenceInputs := []ConfidenceScore{}
 		for i, t := range foundTracks {
-			ci := ConfidenceScoresInput{
+			ci := ConfidenceScore{
 				Index:               i,
 				Query:               t.Artist + " " + t.Title,
 				YoutubeSearchResult: t.FoundTrackInfo,
@@ -272,6 +273,49 @@ func TestGemini(t *testing.T) {
 		}
 
 		d, err := json.MarshalIndent(foundTracks, "", "	")
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.WriteFile("../../data/scored-tracks.json", d, 0666)
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	t.Run("generate confidence scores against inputs with channelTitle too", func(t *testing.T) {
+		// t.Skip("nah g")
+
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			t.Errorf("Error loading .env file")
+		}
+
+		apiKey := os.Getenv("GEMINI_API_KEY")
+		client := NewClient(apiKey)
+
+		bytes, err := os.ReadFile("../../data/confidence-inputs.json")
+		if err != nil {
+			panic(err)
+		}
+
+		inputs := []ConfidenceScore{}
+		err = json.Unmarshal(bytes, &inputs)
+		if err != nil {
+			panic(err)
+		}
+
+		// fix inputs
+		for i, input := range inputs {
+			inputs[i].Query = html.UnescapeString(input.Query)
+			inputs[i].YoutubeSearchResult = html.UnescapeString(input.YoutubeSearchResult)
+		}
+
+		fmt.Printf("generating %d confidence scores", len(inputs))
+
+		outputs := client.GenerateConfidenceScores(inputs)
+
+		d, err := json.MarshalIndent(outputs, "", "	")
 		if err != nil {
 			panic(err)
 		}

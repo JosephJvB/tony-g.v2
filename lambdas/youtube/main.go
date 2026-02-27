@@ -181,9 +181,10 @@ func handleLambdaEvent(evt Evt) {
 	fmt.Printf("\nFound %d / %d tracks\n", totalFound, len(nextTrackRows))
 
 	fmt.Println("Generating confidence scores")
-	cis := []gemini.ConfidenceScoresInput{}
-	for _, t := range nextTrackRows {
-		ci := gemini.ConfidenceScoresInput{
+	cis := []gemini.ConfidenceScore{}
+	for i, t := range nextTrackRows {
+		ci := gemini.ConfidenceScore{
+			Index:               i,
 			Query:               t.Artist + " " + t.Title,
 			YoutubeSearchResult: t.FoundTrackInfo,
 		}
