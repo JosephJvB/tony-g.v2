@@ -37,7 +37,7 @@ Resources:
             # Seems to work!
             ParameterName: /Tony2Stack/*
       Events:
-        WeeklyInvoko:
+        Scheddie:
           Type: ScheduleV2
           Properties:
             # also accepts '{ "videoIds": []string] }' but defaults to next 5 videos
