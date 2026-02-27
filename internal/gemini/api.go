@@ -18,11 +18,11 @@ type ParsedTrack struct {
 }
 
 type ConfidenceScore struct {
-	Index              int    `json:"index"`
-	Query              string `json:"query"`
-	ResultVideoTitle   string `json:"resultVideoTitle"`
-	ResultChannelTitle string `json:"resultChannelTitle"`
-	Score              int    `json:"score"`
+	Index               int    `json:"index"`
+	Query               string `json:"query"`
+	YoutubeVideoTitle   string `json:"youtubeVideoTitle"`
+	YoutubeChannelTitle string `json:"youtubeChannelTitle"`
+	Score               int    `json:"score"`
 }
 type GeminiClient struct {
 	client genai.Client

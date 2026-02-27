@@ -50,8 +50,9 @@ type SearchResult struct {
 		VideoId string `json:"videoId"`
 	} `json:"id"`
 	Snippet struct {
-		Title       string `json:"title"`
-		Description string `json:"description"`
+		Title        string `json:"title"`
+		Description  string `json:"description"`
+		ChannelTitle string `json:"channelTitle"`
 	} `json:"snippet"`
 }
 
@@ -59,7 +60,8 @@ type SearchResult struct {
 type VideoResource struct {
 	Id      string `json:"id"`
 	Snippet struct {
-		Title string `json:"title"`
+		Title        string `json:"title"`
+		ChannelTitle string `json:"channelTitle"`
 	} `json:"snippet"`
 	Status struct {
 		PrivacyStatus string `json:"privacyStatus"`

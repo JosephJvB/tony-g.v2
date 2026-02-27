@@ -3,7 +3,6 @@ package gemini
 import (
 	"encoding/json"
 	"fmt"
-	"html"
 	"os"
 	"strconv"
 	"testing"
@@ -239,10 +238,6 @@ func TestGemini(t *testing.T) {
 			panic(err)
 		}
 
-		for _, t := range foundTracks {
-			t.FoundTrackInfo = html.UnescapeString(t.FoundTrackInfo)
-		}
-
 		if len(foundTracks) == 0 {
 			t.Errorf("Failed to load tracks from data/scraped-tracks.json")
 		}
@@ -255,7 +250,8 @@ func TestGemini(t *testing.T) {
 			ci := ConfidenceScore{
 				Index:               i,
 				Query:               t.Artist + " " + t.Title,
-				YoutubeSearchResult: t.FoundTrackInfo,
+				YoutubeVideoTitle:   t.FoundVideoTitle,
+				YoutubeChannelTitle: t.FoundChannelTitle,
 			}
 			confidenceInputs = append(confidenceInputs, ci)
 		}
@@ -284,7 +280,7 @@ func TestGemini(t *testing.T) {
 	})
 
 	t.Run("generate confidence scores against inputs with channelTitle too", func(t *testing.T) {
-		// t.Skip("nah g")
+		t.Skip("nah g")
 
 		err := godotenv.Load("../../.env")
 		if err != nil {
@@ -303,12 +299,6 @@ func TestGemini(t *testing.T) {
 		err = json.Unmarshal(bytes, &inputs)
 		if err != nil {
 			panic(err)
-		}
-
-		// fix inputs
-		for i, input := range inputs {
-			inputs[i].Query = html.UnescapeString(input.Query)
-			inputs[i].YoutubeSearchResult = html.UnescapeString(input.YoutubeSearchResult)
 		}
 
 		fmt.Printf("generating %d confidence scores", len(inputs))
