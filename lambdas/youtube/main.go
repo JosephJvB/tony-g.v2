@@ -204,7 +204,7 @@ func handleLambdaEvent(evt Evt) {
 		nextTrackRows[i].Confidence = strconv.Itoa(o.Score)
 
 		// only add songs with decent confidence
-		if o.Score >= 50 {
+		if o.Score >= 20 {
 			t := nextTrackRows[i]
 			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], t.FoundVideoId)
 		}
@@ -270,6 +270,7 @@ func main() {
 	// 	panic(err)
 	// }
 	// handleLambdaEvent(Evt{
-	// 	VideoIds: []string{},
+	// 	// VideoIds: []string{},
+	// 	MaxVideosPerRun: 3,
 	// })
 }
