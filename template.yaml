@@ -1,18 +1,18 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: 'Steal (publicly available) intellectual property from Mr Tony Fantano'
+Description: "Steal (publicly available) intellectual property from Mr Tony Fantano"
 
 Parameters:
   Debug:
     Type: String
-    Default: 'true'
+    Default: "true"
     AllowedValues:
-      - 'true'
-      - 'false'
+      - "true"
+      - "false"
 
 Globals:
   Function:
-    Timeout: 120
+    Timeout: 240
     MemorySize: 128
     Environment:
       Variables:
@@ -41,7 +41,7 @@ Resources:
           Type: ScheduleV2
           Properties:
             # also accepts '{ "videoIds": []string] }' but defaults to next 5 videos
-            Input: '{}'
+            Input: "{}"
             # TODO: on cron, tuesday morning
             # Tony releases weekly track roundups on Monday I think.
             # https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-scheduled-rule-pattern.html
