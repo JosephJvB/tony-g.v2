@@ -38,8 +38,8 @@ function sortTonysVideos(sheet) {
 function sortFoundTracks(sheet) {
     var range = sheet.getRange('A2:J')
     range.sort([
-        { column: 8, ascending: false }, // videopublish date
-        { column: 9, ascending: false }, // added_at
+        { column: 9, ascending: false }, // videopublish date
+        { column: 10, ascending: false }, // added_at
     ])
 }
 function sortTest(sheet) {

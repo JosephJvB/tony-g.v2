@@ -153,7 +153,6 @@ columns might need update
 
 - found by spotify search
 - found by google search
-
   - so that way I don't keep retrying songs that weren't found first time
 
   But that's like quite a complicated thing
@@ -275,7 +274,6 @@ would need
 
 1. new sheets in google sheets
 2. new youtube apis
-
    - get playlists
    - search
    - create playlist
@@ -335,13 +333,15 @@ POST https://oauth2.googleapis.com/token
   - Shall I keep sorting with the Google Script? Or do it in code. I think it's better in code right. I'll do that later tho lol.
 
 made a new spreadsheet for fear of messing up live one.
-  - need a new apps script
-  - I should really back this data up too since if I delete the sheet or w/e I'm stuffed
-    - save to CSV? Probably...
+
+- need a new apps script
+- I should really back this data up too since if I delete the sheet or w/e I'm stuffed
+  - save to CSV? Probably...
 
 highly likely gonna have rate limit issues with youtube apis during migration
-  - search
-  - addPlaylistItem (no batch method, have to be 1 by 1)
+
+- search
+- addPlaylistItem (no batch method, have to be 1 by 1)
 
 x2 videos
 x14 songs
@@ -358,20 +358,20 @@ I think this batch had zero youtube urls in desc
 And let's be real, there are gonna be more edge cases I find as I go deeper into the backlog
 So I have to be prepared to delete progress and start again with updated code
 
-| youtubeApiMethod | quotaCost |
-| --- | --- |
-| Search:List | 100 |
-| Videos:List | 1 |
-| Playlists:List | 1 |
-| Playlists:Insert | 50 |
-| PlaylistItems:Insert | 50 |
-| PlaylistItems:List | 1 |
-
+| youtubeApiMethod     | quotaCost |
+| -------------------- | --------- |
+| Search:List          | 100       |
+| Videos:List          | 1         |
+| Playlists:List       | 1         |
+| Playlists:Insert     | 50        |
+| PlaylistItems:Insert | 50        |
+| PlaylistItems:List   | 1         |
 
 Yeah OK so how do I handle where youtube search returns a bogus result
-  - I didn't have this issue with Spotify Search, Spotify typically returned no results on a bad match.
-How do I determine if it's a bad match? Does it have a relevance score in search result?
-It doesn't look like it: https://developers.google.com/youtube/v3/docs/search#resource
+
+- I didn't have this issue with Spotify Search, Spotify typically returned no results on a bad match.
+  How do I determine if it's a bad match? Does it have a relevance score in search result?
+  It doesn't look like it: https://developers.google.com/youtube/v3/docs/search#resource
 
 Another decent use case for AI: check search query and search result are close semantic match
 
@@ -380,15 +380,27 @@ TODO: check some of the rows I marked yellow from first batch.
 Gemini error
 
 Error 429, Message: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit.
-* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
-* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
-* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
-Please retry in 11.63857762s., Status: RESOURCE_EXHAUSTED, Details: [map[@type:type.googleapis.com/google.rpc.Help links:[map[description:Learn more about Gemini API quotas url:https://ai.google.dev/gemini-api/docs/rate-limits]]] map[@type:type.googleapis.com/google.rpc.QuotaFailure violations:[map[quotaDimensions:map[location:global model:gemini-2.0-flash] quotaId:GenerateRequestsPerDayPerProjectPerModel-FreeTier quotaMetric:generativelanguage.googleapis.com/generate_content_free_tier_requests] map[quotaDimensions:map[location:global model:gemini-2.0-flash] quotaId:GenerateRequestsPerMinutePerProjectPerModel-FreeTier quotaMetric:generativelanguage.googleapis.com/generate_content_free_tier_requests] map[quotaDimensions:map[location:global model:gemini-2.0-flash] quotaId:GenerateContentInputTokensPerModelPerMinute-FreeTier quotaMetric:generativelanguage.googleapis.com/generate_content_free_tier_input_token_count]]] map[@type:type.googleapis.com/google.rpc.RetryInfo retryDelay:11s]]
-FAIL	tony-g/internal/gemini	1.119s
-FAIL
+
+- Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+- Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+- Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+  Please retry in 11.63857762s., Status: RESOURCE_EXHAUSTED, Details: [map[@type:type.googleapis.com/google.rpc.Help links:[map[description:Learn more about Gemini API quotas url:https://ai.google.dev/gemini-api/docs/rate-limits]]] map[@type:type.googleapis.com/google.rpc.QuotaFailure violations:[map[quotaDimensions:map[location:global model:gemini-2.0-flash] quotaId:GenerateRequestsPerDayPerProjectPerModel-FreeTier quotaMetric:generativelanguage.googleapis.com/generate_content_free_tier_requests] map[quotaDimensions:map[location:global model:gemini-2.0-flash] quotaId:GenerateRequestsPerMinutePerProjectPerModel-FreeTier quotaMetric:generativelanguage.googleapis.com/generate_content_free_tier_requests] map[quotaDimensions:map[location:global model:gemini-2.0-flash] quotaId:GenerateContentInputTokensPerModelPerMinute-FreeTier quotaMetric:generativelanguage.googleapis.com/generate_content_free_tier_input_token_count]]] map[@type:type.googleapis.com/google.rpc.RetryInfo retryDelay:11s]]
+  FAIL tony-g/internal/gemini 1.119s
+  FAIL
 
 it might just be model version?
 Nah lmao they make you pay for it now. Let's run it for a bit with paid and see how it goes.
 
 google sheets condy forming
 =AND($F1<>"",$F1<80)
+
+Tony has had a quota increase
+So I wanna increase amount of runs - run once an hour thru the day - and batch generate confidence scores requests
+Also I want to update the generate confidence prompt
+
+- especially since the prompt doesn't match the input data anymore, I split youtubeVideoTitle and channelTitle lol
+- ah but actually it's working really well!! It's handling Music Label Youtube Channels and Guest Features in VideoTitle really well (mostly, a few outliers)
+- "I'm Perfect" "Passion Pit" "I'm Perfect" "Passion Pit - Topic" scoring 40 is crazy
+- then "Real Death" "Mount Eerie" "Real Death" "Mount Eerie - Topic" scored 90, lol
+
+Also I want to save an AppVersion to each row on each table for reference
