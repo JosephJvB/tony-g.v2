@@ -245,11 +245,12 @@ func TestGemini(t *testing.T) {
 		apiKey := os.Getenv("GEMINI_API_KEY")
 		client := NewClient(apiKey)
 
-		confidenceInputs := []ConfidenceScore{}
+		confidenceInputs := []ConfidenceScoreInput{}
 		for i, t := range foundTracks {
-			ci := ConfidenceScore{
+			ci := ConfidenceScoreInput{
 				Index:               i,
-				Query:               t.Artist + " " + t.Title,
+				QueryTitle:          t.Title,
+				QueryArtist:         t.Artist,
 				YoutubeVideoTitle:   t.FoundVideoTitle,
 				YoutubeChannelTitle: t.FoundChannelTitle,
 			}
@@ -264,8 +265,8 @@ func TestGemini(t *testing.T) {
 			t.Errorf("failed to generate scores for inputs. Expected %d received %d", len(confidenceInputs), len(outputs))
 		}
 
-		for i, o := range outputs {
-			foundTracks[i].Confidence = strconv.Itoa(o.Score)
+		for i, score := range outputs {
+			foundTracks[i].Confidence = strconv.Itoa(score)
 		}
 
 		d, err := json.MarshalIndent(foundTracks, "", "	")
@@ -295,7 +296,7 @@ func TestGemini(t *testing.T) {
 			panic(err)
 		}
 
-		inputs := []ConfidenceScore{}
+		inputs := []ConfidenceScoreInput{}
 		err = json.Unmarshal(bytes, &inputs)
 		if err != nil {
 			panic(err)

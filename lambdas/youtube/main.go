@@ -184,27 +184,28 @@ func handleLambdaEvent(evt Evt) {
 	fmt.Printf("\nFound %d / %d tracks\n", totalFound, len(nextTrackRows))
 
 	fmt.Println("Generating confidence scores")
-	cis := []gemini.ConfidenceScore{}
+	cis := []gemini.ConfidenceScoreInput{}
 	for i, t := range nextTrackRows {
-		ci := gemini.ConfidenceScore{
+		ci := gemini.ConfidenceScoreInput{
 			Index:               i,
-			Query:               t.Artist + " " + t.Title,
+			QueryTitle:          t.Title,
+			QueryArtist:         t.Artist,
 			YoutubeVideoTitle:   t.FoundVideoTitle,
 			YoutubeChannelTitle: t.FoundChannelTitle,
 		}
 		cis = append(cis, ci)
 	}
-	outputs := gem.GenerateConfidenceScores(cis)
+	scores := gem.GenerateConfidenceScores(cis)
 
-	fmt.Printf("Generated %d confidence scores\n", len(outputs))
+	fmt.Printf("Generated %d confidence scores\n", len(scores))
 	// year -> youtube video id
 	// used for final youtube.AddPlaylistItems
 	toAddByYear := map[string][]string{}
-	for i, o := range outputs {
-		nextTrackRows[i].Confidence = strconv.Itoa(o.Score)
+	for i, score := range scores {
+		nextTrackRows[i].Confidence = strconv.Itoa(score)
 
 		// only add songs with decent confidence
-		if o.Score >= 20 {
+		if score >= 20 {
 			t := nextTrackRows[i]
 			toAddByYear[t.Playlist] = append(toAddByYear[t.Playlist], t.FoundVideoId)
 		}

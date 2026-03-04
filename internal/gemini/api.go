@@ -17,13 +17,14 @@ type ParsedTrack struct {
 	Url    string `json:"url"`
 }
 
-type ConfidenceScore struct {
+type ConfidenceScoreInput struct {
 	Index               int    `json:"index"`
-	Query               string `json:"query"`
+	QueryTitle          string `json:"queryTitle"`
+	QueryArtist         string `json:"queryArtist"`
 	YoutubeVideoTitle   string `json:"youtubeVideoTitle"`
 	YoutubeChannelTitle string `json:"youtubeChannelTitle"`
-	Score               int    `json:"score"`
 }
+
 type GeminiClient struct {
 	client genai.Client
 	ctx    context.Context
@@ -47,17 +48,48 @@ func NewClient(apiKey string) GeminiClient {
 	}
 }
 
-func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScore) []ConfidenceScore {
-	input := `Given a list of items where each has a "query" (artist + song title) and a
-"youtubeSearchResult" (the title of the top YouTube search result), score
-how confident you are (0-100) that the YouTube result is the correct
-official music track.
+func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScoreInput) []int {
+	input := `The following list is the result of multiple Youtube Search API calls to find songs in Youtube.
+Your task is to assign a confidence score from 0 to 100 for each item in the list.
+The confidence score should indicate how well the Youtube search API result matches the query.
+Each item in the list has the following properties:
+- index: Each item has an index field. Your output array must have the same length as the input, where output[i] is the score for input[i].
+- queryTitle: song title used in YoutubeSearch query
+- queryArtist: artist name used in YoutubeSearch query
+- youtubeVideoTitle: title of the YouTube video
+- youtubeChannelTitle: name of the YouTube channel that uploaded the video
 
-Scoring guidelines:
-- 90-100: Result clearly matches the artist and song title (official audio/video)
-- 50-89: Result likely matches but has extra info (feat. artists, remix labels, etc.)
-- 20-49: Result is ambiguous — could be a cover, live version, or compilation
-- 0-19: Result is clearly wrong (different song, reaction video, unrelated content)
+### Scoring guidelines:
+
+- 90-100: Strong confidence. 
+	- "youtubeVideoTitle" should include "queryTitle".
+	- "youtubeVideoTitle" might also include "queryArtist".
+	- "youtubeVideoTitle" might include "official audio", "official video". This should not lower score.
+	- "youtubeChannelTitle" should match "queryArtist".
+	- "youtubeChannelTitle" might include "- Topic" or "VEVO". This should not lower score.
+	- Examples of strong matches:
+		- {"queryTitle":"Goose Snow Cone","queryArtist":"Aimee Mann","youtubeVideoTitle":"Aimee Mann - Goose Snow Cone (Official Audio)","youtubeChannelTitle":"Aimee Mann"} -> 100
+		- {"queryTitle":"Real Death","queryArtist":"Mount Eerie","youtubeVideoTitle":"Real Death","youtubeChannelTitle":"Mount Eerie"} -> 100
+
+- 60-89: Good confidence. Accept cosmetic inconsistencies such as:
+	- "youtubeChannelTitle" might not match at all. It may be the offical Music Label releasing the song instead of the artist.
+	- "youtubeVideoTitle" might have inconsistent guest features. eg: Feat. ft.
+	- Examples:
+		- {"queryTitle":"Help ft. Wiki & Edan","queryArtist":"Your Old Droog","youtubeVideoTitle":"Your Old Droog - "Help" feat. Wiki and Edan","youtubeChannelTitle":"Your Old Droog"} -> 89 (imperfect guest features)
+		- {"queryTitle":"Memories Are Now","queryArtist":"Jesca Hoop","youtubeVideoTitle":"Jesca Hoop - Memories Are Now [OFFICIAL VIDEO]","youtubeChannelTitle":"Sub Pop"} -> 89 (channel is Music Label)
+
+- 20-59: Moderate confidence. Accept more significant inconsistencies such as:
+	- spelling or wording matches are not exact but the sentiment is correct.
+	- "youtubeChannelTitle" might be a fan YouTube channel instead of the "queryArtist" or official music label.
+	- Examples:
+		- {"queryTitle":"Vapid Feels Are Vapid","queryArtist":"Clarence Clarity","youtubeVideoTitle":"Vapid Feels Ain't Vapid","youtubeChannelTitle":"Clarence Clarity - Topic"} -> 59 (incorrect title, correct sentiment)
+		- {"queryTitle":"It Takes Two","queryArtist":"Mike Will Made-It, Lil Yachty, Carly Rae Jepsen","youtubeVideoTitle":"Mike WiLL Made It, Lil Yachty, Carly Rae Jepsen   It Takes Two","youtubeChannelTitle":"Андрей Гантимуровl"} -> 30 (fan channel)
+
+- 0-19: No confidence.
+	- It's clear the YouTube search result is not the song from the Query.
+	- Examples:
+		- {"queryTitle":"K33p Ur Dr34ms (Suicide Remix)","queryArtist":"DJ Windows 98 (Win Butler)","youtubeVideoTitle":"Лучшие и худшие треки недели. 24 июня Desiigner, Skrillex, Rick Ross(theneddledrop на русском)","youtubeChannelTitle":"he-he he-he-he"} -> 0 (completely wrong)
+		- {"queryTitle":"Dress (PJ Harvey Cover)","queryArtist":"Buke & Gase","youtubeVideoTitle":"Buke & Gase - Hiccup","youtubeChannelTitle":"shepritzl"} -> 19 (right artist wrong song)
 
 Return a JSON array with the same length as the input
 where each item is your confidence score relating to the corresponding input item.`
@@ -107,18 +139,14 @@ where each item is your confidence score relating to the corresponding input ite
 		log.Fatal(err)
 	}
 
-	outputs := []int{}
-	err = json.Unmarshal([]byte(result.Text()), &outputs)
+	scores := []int{}
+	err = json.Unmarshal([]byte(result.Text()), &scores)
 	if err != nil {
 		log.Fatalf("GenerateConfidenceScores: Failed to parse response JSON")
 	}
 
-	if len(outputs) != len(inputs) {
-		log.Fatalf("GenerateConfidenceScores: expected %d scores, got %d", len(inputs), len(outputs))
-	}
-
-	for i, score := range outputs {
-		inputs[i].Score = score
+	if len(scores) != len(inputs) {
+		log.Fatalf("GenerateConfidenceScores: expected %d scores, got %d", len(inputs), len(scores))
 	}
 
 	// d, err := json.MarshalIndent(scores, "", "	")
@@ -131,7 +159,7 @@ where each item is your confidence score relating to the corresponding input ite
 	// 	panic(err)
 	// }
 
-	return inputs
+	return scores
 }
 
 func (c *GeminiClient) ParseYoutubeDescription(description string) []ParsedTrack {
