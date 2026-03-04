@@ -6,12 +6,13 @@ import (
 
 func TestGoogleSheetsModels(t *testing.T) {
 	t.Run("Row to Tony Video", func(t *testing.T) {
-		r := make([]interface{}, 5)
+		r := make([]interface{}, 6)
 		r[0] = "id-123"
 		r[1] = "weekly tracko roundo"
 		r[2] = "2025-01-01"
 		r[3] = "10"
 		r[4] = "ages ago"
+		r[5] = "1.0.0"
 
 		v := RowToTonyVideo(r)
 
@@ -30,6 +31,9 @@ func TestGoogleSheetsModels(t *testing.T) {
 		if v.AddedAt != "ages ago" {
 			t.Errorf("expected addedAt to be ages ago. Got %s", v.AddedAt)
 		}
+		if v.AppVersion != "1.0.0" {
+			t.Errorf("expected appVersion to be 1.0.0. Got %s", v.AppVersion)
+		}
 	})
 
 	t.Run("Youtube Video To Row", func(t *testing.T) {
@@ -39,12 +43,13 @@ func TestGoogleSheetsModels(t *testing.T) {
 			PublishedAt: "2025-01-01",
 			TotalTracks: 10,
 			AddedAt:     "ages ago",
+			AppVersion:  "1.0.0",
 		}
 
 		row := TonyVideoToRow(v)
 
-		if len(row) != 5 {
-			t.Errorf("expected row to have 5 elements. Got %d", len(row))
+		if len(row) != 6 {
+			t.Errorf("expected row to have 6 elements. Got %d", len(row))
 		}
 
 		if row[0] != "id-123" {
@@ -60,7 +65,10 @@ func TestGoogleSheetsModels(t *testing.T) {
 			t.Errorf("expected row[3] to be 10. Got %d", row[3])
 		}
 		if row[4] != "ages ago" {
-			t.Errorf("expected row[5] to be ages ago. Got %s", row[5])
+			t.Errorf("expected row[4] to be ages ago. Got %s", row[4])
+		}
+		if row[5] != "1.0.0" {
+			t.Errorf("expected row[5] to be 1.0.0. Got %s", row[5])
 		}
 	})
 
@@ -77,12 +85,13 @@ func TestGoogleSheetsModels(t *testing.T) {
 			ReviewVideoPublishDate: "recently",
 			AddedAt:                "ages ago",
 			Playlist:               "2024",
+			AppVersion:             "1.0.0",
 		}
 
 		row := FoundTrackToRow(yt)
 
-		if len(row) != 11 {
-			t.Errorf("expected row to have 11 elements. Got %d", len(row))
+		if len(row) != 12 {
+			t.Errorf("expected row to have 12 elements. Got %d", len(row))
 		}
 
 		if row[0] != "little things" {
@@ -118,10 +127,13 @@ func TestGoogleSheetsModels(t *testing.T) {
 		if row[10] != "2024" {
 			t.Errorf("expected row[10] to be 2024. Got %s", row[10])
 		}
+		if row[11] != "1.0.0" {
+			t.Errorf("expected row[11] to be 1.0.0. Got %s", row[11])
+		}
 	})
 
 	t.Run("Row to Youtube Track", func(t *testing.T) {
-		r := make([]interface{}, 11)
+		r := make([]interface{}, 12)
 		r[0] = "little things"
 		r[1] = "adrianne"
 		r[2] = "adrianne little things"
@@ -133,6 +145,7 @@ func TestGoogleSheetsModels(t *testing.T) {
 		r[8] = "recently"
 		r[9] = "ages ago"
 		r[10] = "2024"
+		r[11] = "1.0.0"
 
 		yt := RowToFoundTrack(r)
 
@@ -168,6 +181,9 @@ func TestGoogleSheetsModels(t *testing.T) {
 		}
 		if yt.Playlist != "2024" {
 			t.Errorf("expected playlist to be 2024. Got %s", yt.Playlist)
+		}
+		if yt.AppVersion != "1.0.0" {
+			t.Errorf("expected appVersion to be 1.0.0. Got %s", yt.AppVersion)
 		}
 	})
 }

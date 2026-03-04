@@ -10,6 +10,7 @@ type TonyVideoRow struct {
 	PublishedAt string
 	TotalTracks int
 	AddedAt     string
+	AppVersion  string
 }
 type FoundTrackRow struct {
 	Title                  string
@@ -23,6 +24,7 @@ type FoundTrackRow struct {
 	ReviewVideoPublishDate string
 	AddedAt                string
 	Playlist               string
+	AppVersion             string
 }
 
 func RowToTonyVideo(row []interface{}) TonyVideoRow {
@@ -38,16 +40,18 @@ func RowToTonyVideo(row []interface{}) TonyVideoRow {
 		PublishedAt: row[2].(string),
 		TotalTracks: tt,
 		AddedAt:     row[4].(string),
+		AppVersion:  row[5].(string),
 	}
 }
 
 func TonyVideoToRow(video TonyVideoRow) []interface{} {
-	r := make([]interface{}, 5)
+	r := make([]interface{}, 6)
 	r[0] = video.Id
 	r[1] = video.Title
 	r[2] = video.PublishedAt
 	r[3] = video.TotalTracks
 	r[4] = video.AddedAt
+	r[5] = video.AppVersion
 
 	return r
 }
@@ -65,11 +69,12 @@ func RowToFoundTrack(row []interface{}) FoundTrackRow {
 		ReviewVideoPublishDate: row[8].(string),
 		AddedAt:                row[9].(string),
 		Playlist:               row[10].(string),
+		AppVersion:             row[11].(string),
 	}
 }
 
 func FoundTrackToRow(track FoundTrackRow) []interface{} {
-	r := make([]interface{}, 11)
+	r := make([]interface{}, 12)
 	r[0] = track.Title
 	r[1] = track.Artist
 	r[2] = track.FoundVideoTitle
@@ -81,6 +86,6 @@ func FoundTrackToRow(track FoundTrackRow) []interface{} {
 	r[8] = track.ReviewVideoPublishDate
 	r[9] = track.AddedAt
 	r[10] = track.Playlist
-
+	r[11] = track.AppVersion
 	return r
 }

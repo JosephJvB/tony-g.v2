@@ -29,14 +29,14 @@ function onChange(e) {
 }
 
 function sortTonysVideos(sheet) {
-    var range = sheet.getRange('A2:E')
+    var range = sheet.getRange('A2:F')
     range.sort([
         { column: 3, ascending: false }, // published_at
         // { column: 7, ascending: false }, // added_at
     ])
 }
 function sortFoundTracks(sheet) {
-    var range = sheet.getRange('A2:J')
+    var range = sheet.getRange('A2:L')
     range.sort([
         { column: 9, ascending: false }, // videopublish date
         { column: 10, ascending: false }, // added_at
