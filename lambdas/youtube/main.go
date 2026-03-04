@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"tony-g/internal"
 	"tony-g/internal/gemini"
 	"tony-g/internal/googlesheets"
 	"tony-g/internal/ssm"
@@ -20,7 +21,9 @@ type Evt struct {
 	VideoIds        []string `json:"videoIds"`
 }
 
-const MAX_VIDEOS_PER_RUN = 3
+// how long does 10vids take?
+// 5-6min
+const MAX_VIDEOS_PER_RUN = 10
 
 func handleLambdaEvent(evt Evt) {
 	now := time.Now()
@@ -113,6 +116,7 @@ func handleLambdaEvent(evt Evt) {
 			PublishedAt: v.Snippet.PublishedAt,
 			TotalTracks: len(nextTracks),
 			AddedAt:     timestamp,
+			AppVersion:  internal.APP_VERSION,
 		}
 		nextVideoRows = append(nextVideoRows, nv)
 
@@ -134,6 +138,7 @@ func handleLambdaEvent(evt Evt) {
 				ReviewVideoPublishDate: v.Snippet.PublishedAt,
 				AddedAt:                timestamp,
 				Playlist:               strconv.Itoa(year),
+				AppVersion:             internal.APP_VERSION,
 			}
 
 			nextTrackRows = append(nextTrackRows, r)
@@ -265,13 +270,20 @@ func handleLambdaEvent(evt Evt) {
 }
 
 func main() {
+	start := time.Now()
+	// AWS
 	lambda.Start(handleLambdaEvent)
+
+	// LOCAL
 	// err := godotenv.Load(".env")
 	// if err != nil {
 	// 	panic(err)
 	// }
 	// handleLambdaEvent(Evt{
 	// 	// VideoIds: []string{},
-	// 	MaxVideosPerRun: 3,
+	// 	// MaxVideosPerRun: 3,
 	// })
+
+	elapsed := time.Since(start)
+	fmt.Printf("Execution took %s\n", elapsed)
 }

@@ -404,3 +404,10 @@ Also I want to update the generate confidence prompt
 - then "Real Death" "Mount Eerie" "Real Death" "Mount Eerie - Topic" scored 90, lol
 
 Also I want to save an AppVersion to each row on each table for reference
+
+
+SOFT PLAY are failing the confidence cos they used to be called Slaves. I could fix it. But maybe that's their fault in the first place lol.
+
+Youtube search failed to find King Gizzard Digital Black. Maybe cos queryArtist wasn't King Gizzard & the Lizard Wizard - also that would drop the confidence score a lot.
+
+=AND($G1<>"",VALUE($G1)<50)

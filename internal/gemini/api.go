@@ -48,28 +48,36 @@ func NewClient(apiKey string) GeminiClient {
 	}
 }
 
+// maybe too conservative.
 const MAX_CONFIDENCE_INPUTS = 20
 
 func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScoreInput) []int {
 	allScores := []int{}
 
+	totalStart := time.Now()
 	for i := 0; i < len(inputs); i += MAX_CONFIDENCE_INPUTS {
 		end := min(i+MAX_CONFIDENCE_INPUTS, len(inputs))
 		batch := inputs[i:end]
 
+		start := time.Now()
 		scores := c.generateConfidenceScores(batch)
+		elapsed := time.Since(start)
+		fmt.Printf("Generated confidence scores for batch %d-%d in %ssec\n", i, end, elapsed)
+
 		allScores = append(allScores, scores...)
 	}
+	totalElapsed := time.Since(totalStart)
+	fmt.Printf("Generated confidence scores for all %d inputs in %ssec\n", len(inputs), totalElapsed)
 
 	return allScores
 }
 
-// tbh scoring doesn't really need to be a value between 0-100
-// I could ask gemini to return Enum type values
-// strong, moderate, low, none (confidence)
-// yolo
+// this prompt is a lot slower than the other one
+// 5-6sec vs 10-15sec
+// obv it's lots bigger
+// but defs pref accuracy over speed
+// I wanna improve the other one too
 func (c *GeminiClient) generateConfidenceScores(inputs []ConfidenceScoreInput) []int {
-	fmt.Printf("generating confo for %d inputs\n", len(inputs))
 	input := `The following list is the result of multiple Youtube Search API calls to find songs in Youtube.
 Your task is to assign a confidence score from 0 to 100 for each item in the list.
 The confidence score should indicate how well the Youtube search API result matches the query.
@@ -88,7 +96,7 @@ Each item in the list has the following properties:
 	- "youtubeVideoTitle" might include "official audio", "official video". This should not lower score.
 	- "youtubeChannelTitle" should match "queryArtist".
 	- "youtubeChannelTitle" might include "- Topic" or "VEVO". This should not lower score.
-	- Examples of strong matches:
+	- Examples:
 		- {"queryTitle":"Goose Snow Cone","queryArtist":"Aimee Mann","youtubeVideoTitle":"Aimee Mann - Goose Snow Cone (Official Audio)","youtubeChannelTitle":"Aimee Mann"} -> 100
 		- {"queryTitle":"Real Death","queryArtist":"Mount Eerie","youtubeVideoTitle":"Real Death","youtubeChannelTitle":"Mount Eerie"} -> 100
 
@@ -195,6 +203,7 @@ func (c *GeminiClient) ParseYoutubeDescription(description string) []ParsedTrack
 	input += "\n"
 	input += description
 
+	start := time.Now()
 	result, err := c.client.Models.GenerateContent(
 		c.ctx,
 		GEMINI_MODEL,
@@ -245,6 +254,8 @@ func (c *GeminiClient) ParseYoutubeDescription(description string) []ParsedTrack
 
 		log.Fatal(err)
 	}
+	elapsed := time.Since(start)
+	fmt.Printf("Gemini parsed Youtube description in %ssec\n", elapsed)
 
 	parsedTracks := []ParsedTrack{}
 	err = json.Unmarshal([]byte(result.Text()), &parsedTracks)

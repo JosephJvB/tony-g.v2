@@ -12,8 +12,8 @@ Parameters:
 
 Globals:
   Function:
-    Timeout: 240
-    MemorySize: 128
+    Timeout: 540 # 9 minutes. Typically takes 5-6 minutes to run, but give it some buffer. Lambda max is 15 minutes.
+    MemorySize: 256
     Environment:
       Variables:
         DEBUG: !Ref Debug
@@ -50,7 +50,10 @@ Resources:
             # NZDT version
             # ScheduleExpression: cron(0 18 ? * MON *)
             # run daily at UTC 6pm ~= NZDT 7am
-            ScheduleExpression: cron(0 18 * * ? *)
+            # ScheduleExpression: cron(0 18 * * ? *)
+            # should run at (UTC) 6pm, 7pm, 8pm, 9pm, 10pm, 11pm
+            # NZDT version: 7am, 8am, 9am, 10am, 11am, 12pm
+            ScheduleExpression: cron(0 18-23 * * ? *)
 
 Outputs:
   YoutubeLambdaFn:

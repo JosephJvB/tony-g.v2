@@ -286,6 +286,7 @@ func (yt *YoutubeClient) AddPlaylistItems(playlistId string, videoIds []string) 
 		yt.setAccessToken()
 	}
 
+	totalStart := time.Now()
 	for i, videoId := range videoIds {
 		fmt.Printf("adding track %d/%d to playlist\r", i+1, len(videoIds))
 		// always add items at the start of a playlist
@@ -293,6 +294,8 @@ func (yt *YoutubeClient) AddPlaylistItems(playlistId string, videoIds []string) 
 		addPlaylistItem(yt.accessToken, playlistId, videoId, 0)
 		time.Sleep(time.Second * 1)
 	}
+	totalElapsed := time.Since(totalStart)
+	fmt.Printf("added %d tracks to playlist in %ssec\n", len(videoIds), totalElapsed)
 }
 
 // TODO: define input type rather than 3 strings
