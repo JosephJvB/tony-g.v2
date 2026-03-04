@@ -20,17 +20,17 @@ type SheetConfig struct {
 var TonysVideoSheet = SheetConfig{
 	Name:        "Tony's Videos",
 	Id:          571234434,
-	AllRowRange: "A2:E",
+	AllRowRange: "A2:F",
 }
 var FoundTrackSheet = SheetConfig{
 	Name:        "Found Tracks",
 	Id:          724494626,
-	AllRowRange: "A2:J",
+	AllRowRange: "A2:L",
 }
 var TESTTrackSheet = SheetConfig{
 	Name:        "TEST",
 	Id:          189720870,
-	AllRowRange: "A2:J",
+	AllRowRange: "A2:L",
 }
 
 type GoogleSheetsClient struct {
