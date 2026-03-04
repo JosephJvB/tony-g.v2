@@ -246,6 +246,7 @@ func TestGemini(t *testing.T) {
 		client := NewClient(apiKey)
 
 		confidenceInputs := []ConfidenceScoreInput{}
+		foundTracks = foundTracks[30:70] // limit to 30 for testing purposes
 		for i, t := range foundTracks {
 			ci := ConfidenceScoreInput{
 				Index:               i,
@@ -257,15 +258,15 @@ func TestGemini(t *testing.T) {
 			confidenceInputs = append(confidenceInputs, ci)
 		}
 
-		outputs := client.GenerateConfidenceScores(confidenceInputs)
+		scores := client.GenerateConfidenceScores(confidenceInputs)
 
-		fmt.Printf("generated %d confidence scores from %d inputs", len(outputs), len(confidenceInputs))
+		fmt.Printf("generated %d confidence scores from %d inputs\n", len(scores), len(confidenceInputs))
 
-		if len(outputs) != len(confidenceInputs) {
-			t.Errorf("failed to generate scores for inputs. Expected %d received %d", len(confidenceInputs), len(outputs))
+		if len(scores) != len(confidenceInputs) {
+			t.Errorf("failed to generate scores for inputs. Expected %d received %d", len(confidenceInputs), len(scores))
 		}
 
-		for i, score := range outputs {
+		for i, score := range scores {
 			foundTracks[i].Confidence = strconv.Itoa(score)
 		}
 

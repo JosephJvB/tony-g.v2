@@ -48,7 +48,28 @@ func NewClient(apiKey string) GeminiClient {
 	}
 }
 
+const MAX_CONFIDENCE_INPUTS = 20
+
 func (c *GeminiClient) GenerateConfidenceScores(inputs []ConfidenceScoreInput) []int {
+	allScores := []int{}
+
+	for i := 0; i < len(inputs); i += MAX_CONFIDENCE_INPUTS {
+		end := min(i+MAX_CONFIDENCE_INPUTS, len(inputs))
+		batch := inputs[i:end]
+
+		scores := c.generateConfidenceScores(batch)
+		allScores = append(allScores, scores...)
+	}
+
+	return allScores
+}
+
+// tbh scoring doesn't really need to be a value between 0-100
+// I could ask gemini to return Enum type values
+// strong, moderate, low, none (confidence)
+// yolo
+func (c *GeminiClient) generateConfidenceScores(inputs []ConfidenceScoreInput) []int {
+	fmt.Printf("generating confo for %d inputs\n", len(inputs))
 	input := `The following list is the result of multiple Youtube Search API calls to find songs in Youtube.
 Your task is to assign a confidence score from 0 to 100 for each item in the list.
 The confidence score should indicate how well the Youtube search API result matches the query.
@@ -162,6 +183,8 @@ where each item is your confidence score relating to the corresponding input ite
 	return scores
 }
 
+// TODO: improve prompt
+// - give examples of double songs
 func (c *GeminiClient) ParseYoutubeDescription(description string) []ParsedTrack {
 	input := "Return the Best Tracks mentioned in the following text snippet"
 	// it was giving me ...meh... tracks
