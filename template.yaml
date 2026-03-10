@@ -47,13 +47,13 @@ Resources:
             # https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-scheduled-rule-pattern.html
             # minutes, hours, day-of-month, month, day-of-week, year
             # ScheduleExpression: cron(0 7 ? * TUE *)
-            # NZDT version
-            # ScheduleExpression: cron(0 18 ? * MON *)
+            # NZDT version (ie: nz tuesday morning)
+            ScheduleExpression: cron(0 18 ? * MON *)
             # run daily at UTC 6pm ~= NZDT 7am
             # ScheduleExpression: cron(0 18 * * ? *)
             # should run at (UTC) 6pm, 7pm, 8pm, 9pm, 10pm, 11pm
             # NZDT version: 7am, 8am, 9am, 10am, 11am, 12pm
-            ScheduleExpression: cron(0 18-23 * * ? *)
+            # ScheduleExpression: cron(0 18-23 * * ? *)
 
 Outputs:
   YoutubeLambdaFn:

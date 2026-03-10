@@ -39,7 +39,7 @@ func TestYoutube(t *testing.T) {
 			ApiKey: apiKey,
 		})
 
-		items := yt.LoadAllPlaylistItems("PLShqBUh4XbMUKR87gh9ZxUbsYkQoZd7aF")
+		items := yt.LoadAllPlaylistItems("PLP4CSgl7K7or84AAhr7zlLNpghEnKWu2c")
 
 		if len(items) == 0 {
 			t.Errorf("Failed to load playlist items")
